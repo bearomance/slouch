@@ -18,6 +18,9 @@ xcuserdata/
 .build/
 .swiftpm/
 
+# Packaged app bundle (build artifact)
+Slouch.app/
+
 # User-local config / secrets (never commit)
 *.local
 .env
