@@ -32,6 +32,10 @@ struct GeneralTab: View {
 
     var body: some View {
         Form {
+            Section("Startup") {
+                Toggle("Launch at login", isOn: $model.launchAtLogin)
+                Toggle("Enable on launch", isOn: $model.config.settings.enableOnLaunch)
+            }
             Section("Sensitivity") {
                 NumberSettingRow(
                     title: "Cursor speed",

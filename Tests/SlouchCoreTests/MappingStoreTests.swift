@@ -14,6 +14,23 @@ final class MappingStoreTests: XCTestCase {
         XCTAssertEqual(store.load(), Config.default)
     }
 
+    func test_loadLegacyConfigWithoutEnableOnLaunch_keepsValuesAndDefaultsOn() throws {
+        let dir = tempDir()
+        let legacy = """
+        {
+          "mapping" : { "buttons" : [ "a", { "mouseClick" : { "_0" : "right" } } ],
+                        "leftStick" : "scroll", "rightStick" : "mouseMove" },
+          "settings" : { "cursorSpeed" : 3000, "deadZone" : 0.05, "scrollSpeed" : 50 }
+        }
+        """
+        try legacy.data(using: .utf8)!.write(to: dir.appendingPathComponent("config.json"))
+
+        let loaded = MappingStore(directory: dir).load()
+        XCTAssertEqual(loaded.settings.cursorSpeed, 3000)
+        XCTAssertEqual(loaded.mapping.buttons[.a], .mouseClick(.right))
+        XCTAssertTrue(loaded.settings.enableOnLaunch)
+    }
+
     func test_saveThenLoad_roundTrips() throws {
         let dir = tempDir()
         let store = MappingStore(directory: dir)

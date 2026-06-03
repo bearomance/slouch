@@ -1,5 +1,6 @@
 import SwiftUI
 import QuartzCore
+import ServiceManagement
 import SlouchCore
 
 @MainActor
@@ -9,6 +10,17 @@ final class AppModel: ObservableObject {
     @Published var isReconnecting = false
     @Published var isTrusted = PermissionsManager.isTrusted()
     @Published var config: Config { didSet { applyConfig() } }
+    @Published var launchAtLogin = SMAppService.mainApp.status == .enabled {
+        didSet {
+            guard launchAtLogin != oldValue else { return }
+            do {
+                if launchAtLogin { try SMAppService.mainApp.register() }
+                else { try SMAppService.mainApp.unregister() }
+            } catch {
+                launchAtLogin = oldValue
+            }
+        }
+    }
 
     private let store = MappingStore()
     private let source: GamepadSource
@@ -47,6 +59,11 @@ final class AppModel: ObservableObject {
             object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.recheckPermission() }
             }
+
+        if loaded.settings.enableOnLaunch {
+            // didSet (and thus start()) doesn't fire for assignments inside init.
+            Task { @MainActor [weak self] in self?.isEnabled = true }
+        }
     }
 
     private func applyConfig() {

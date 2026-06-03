@@ -34,11 +34,23 @@ public struct Settings: Codable, Equatable, Sendable {
     public var cursorSpeed: Double   // px/sec at full deflection
     public var scrollSpeed: Double   // lines/sec at full deflection
     public var deadZone: Double      // 0...0.5
+    public var enableOnLaunch: Bool
 
-    public init(cursorSpeed: Double = 1400, scrollSpeed: Double = 30, deadZone: Double = 0.05) {
+    public init(cursorSpeed: Double = 1400, scrollSpeed: Double = 30, deadZone: Double = 0.05,
+                enableOnLaunch: Bool = true) {
         self.cursorSpeed = cursorSpeed
         self.scrollSpeed = scrollSpeed
         self.deadZone = deadZone
+        self.enableOnLaunch = enableOnLaunch
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        cursorSpeed = try c.decode(Double.self, forKey: .cursorSpeed)
+        scrollSpeed = try c.decode(Double.self, forKey: .scrollSpeed)
+        deadZone = try c.decode(Double.self, forKey: .deadZone)
+        // Absent in configs written before the field existed.
+        enableOnLaunch = try c.decodeIfPresent(Bool.self, forKey: .enableOnLaunch) ?? true
     }
 
     public static let `default` = Settings()
