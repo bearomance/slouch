@@ -29,7 +29,11 @@ struct MenuContent: View {
     var body: some View {
         Toggle("Enabled", isOn: $model.isEnabled)
         Divider()
-        Text(model.isConnected ? "Controller: connected" : "Controller: not found")
+        if model.isReconnecting && !model.isConnected {
+            Text("Controller: reconnecting…")
+        } else {
+            Text(model.isConnected ? "Controller: connected" : "Controller: not found")
+        }
         if !model.isTrusted {
             Text("⚠︎ Accessibility permission needed")
             Button("Open Accessibility Settings…") {

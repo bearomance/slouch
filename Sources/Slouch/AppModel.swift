@@ -6,6 +6,7 @@ import SlouchCore
 final class AppModel: ObservableObject {
     @Published var isEnabled = false { didSet { isEnabled ? start() : stop() } }
     @Published var isConnected = false
+    @Published var isReconnecting = false
     @Published var isTrusted = PermissionsManager.isTrusted()
     @Published var config: Config { didSet { applyConfig() } }
 
@@ -26,11 +27,19 @@ final class AppModel: ObservableObject {
         self.engine = MappingEngine(mapping: loaded.mapping, settings: loaded.settings)
 
         self.source.onConnectionChange = { [weak self] connected in
-            Task { @MainActor in self?.isConnected = connected }
+            Task { @MainActor in
+                self?.isConnected = connected
+                if connected { self?.isReconnecting = false }
+            }
         }
         self.isConnected = source.isConnected
         self.wakeWatcher = WakeWatcher { [weak self] in
-            Task { @MainActor in self?.source.rebind() }
+            Task { @MainActor in
+                guard let self else { return }
+                self.isReconnecting = true
+                self.source.rebind()
+                if self.source.isConnected { self.isReconnecting = false }
+            }
         }
     }
 
