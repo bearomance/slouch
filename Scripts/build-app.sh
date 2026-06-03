@@ -43,11 +43,17 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-echo "Ad-hoc code-signing…"
-codesign --force --deep --sign - "$APP"
+IDENTITY="${SLOUCH_SIGN_IDENTITY:-Slouch Code Signing}"
+if security find-identity -v -p codesigning | grep -q "$IDENTITY"; then
+  echo "Code-signing with '$IDENTITY'…"
+  codesign --force --deep --sign "$IDENTITY" "$APP"
+else
+  echo "Identity '$IDENTITY' not found — falling back to ad-hoc signing."
+  echo "  (Ad-hoc signed builds lose the Accessibility grant on every rebuild.)"
+  codesign --force --deep --sign - "$APP"
+fi
 
 echo ""
 echo "Done. The app is at ./$APP"
 echo "  • Optionally move it to /Applications."
 echo "  • On first run, grant Accessibility in System Settings ▸ Privacy & Security ▸ Accessibility."
-echo "  • Because it is ad-hoc signed, macOS may re-prompt for Accessibility after a rebuild."
