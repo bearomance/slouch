@@ -8,6 +8,8 @@ final class GCGamepadSource: GamepadSource {
     var isConnected: Bool { controller?.extendedGamepad != nil }
 
     init() {
+        // LSUIElement apps are never frontmost; without this the framework drops all input.
+        GCController.shouldMonitorBackgroundEvents = true
         bind()
         NotificationCenter.default.addObserver(
             forName: .GCControllerDidConnect, object: nil, queue: .main) { [weak self] _ in
