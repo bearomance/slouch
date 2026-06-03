@@ -6,9 +6,8 @@ Slouch is a macOS menu-bar app that turns a game controller into a Mac control
 device. It's built for one scenario in particular: a Mac connected to a TV,
 controlled from the couch with no keyboard or mouse in reach.
 
-> **Status:** Early development. The design is complete (see
-> [`docs/superpowers/specs`](docs/superpowers/specs)); implementation is in
-> progress.
+> **Status:** MVP implemented — all features below work and the unit suite is
+> green. Pending real-hardware verification of the wake-self-heal path.
 
 ## Why
 
@@ -29,8 +28,14 @@ and the controller works immediately — no manual reconnect.
   buttons left/right-click. (On a TV, clicking the video handles
   play/pause/fullscreen, so no media keys are needed.)
 - **Keyboard mapping** — map any button to an arbitrary key or key-combo,
-  including a one-button trigger for your dictation / voice-input app.
-- **Adjustable** — cursor speed and stick dead zone.
+  including a one-button trigger for your dictation / voice-input app. Combos
+  can be recorded from the keyboard or typed (e.g. `cmd+shift+space`, `F6`).
+- **Open URL** — map a button to launch a site in your default browser
+  (one button straight to your video site of choice).
+- **In-app binding editor** — every button is re-bindable from the Settings
+  window: pick Mouse / Keyboard / Function, then the detail.
+- **Adjustable** — cursor speed, scroll speed, and stick dead zone, with ranges
+  and recommended values shown.
 - **Menu-bar app** — enable/disable and connection status at a glance.
 
 ## Requirements
@@ -42,7 +47,10 @@ and the controller works immediately — no manual reconnect.
 - **Accessibility permission** must be granted (so the app can move the mouse and
   send keys). Slouch guides you through this on first run.
 - To wake the Mac with the controller, enable **"Allow Bluetooth devices to wake
-  this computer"** in System Settings.
+  this computer"** in System Settings (recent macOS enables this by default for
+  paired input devices).
+- The first sleep triggers a one-time **Automation** prompt (Slouch drives
+  System Events to sleep the Mac) — allow it.
 
 ## How it works
 

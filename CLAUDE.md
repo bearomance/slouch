@@ -15,7 +15,7 @@ self-heal. Full design lives in
 - Native **Swift + SwiftUI**, menu-bar-only app (`LSUIElement`, no Dock icon).
 - **GameController** framework (`GCController` / `GCExtendedGamepad`) for input.
 - **CGEvent** (Core Graphics) for synthesizing mouse/keyboard output.
-- macOS 13+ (`MenuBarExtra`, `SMAppService`).
+- macOS 14+ (`MenuBarExtra`, `SettingsLink`).
 - No network, no API keys, no secrets. Everything runs locally.
 
 ## Architecture
@@ -32,9 +32,19 @@ diagram):
 - `OutputSynthesizer` — emits CGEvents (mouse move/click/scroll, keystrokes).
   Behind a protocol so tests can assert emitted actions.
 - `MappingStore` — persists the single mapping + sensitivity as Codable JSON.
-- `SystemActions` — system sleep.
+- `SystemActions` — system sleep (AppleScript) and open-URL (NSWorkspace).
 - `PermissionsManager` — Accessibility trust check + guidance.
-- SwiftUI UI — `MenuBarExtra` + settings window.
+- SwiftUI UI — `MenuBarExtra` + settings window (General / Buttons tabs;
+  `ButtonBindingEditor` with key recorder and typed-combo entry via
+  `KeyStroke.parse`).
+
+## Build & run
+
+- `swift test` — full unit suite (pure-logic core; no hardware needed).
+- `swift build` — compile everything including the app target.
+- `./Scripts/build-app.sh` — package a signed `Slouch.app` (menu-bar bundle).
+- Do NOT `swift run Slouch` from an agent session — it blocks on the GUI event
+  loop. Use `open ./Slouch.app` after packaging instead.
 
 ## Conventions
 
@@ -44,6 +54,10 @@ diagram):
 - Comments: only for non-obvious *why* (an invariant, a workaround). Don't
   narrate what the code does — names and the spec carry that.
 - Match surrounding style for naming and structure.
+- Gotcha: `OutputAction.none` collides with `Optional.none`. In a `switch` over
+  `OutputAction?`, a bare `.none` pattern matches `nil`, not the enum case —
+  write `OutputAction.none?` / `.some(.none)` explicitly. This has caused
+  repeated compile errors; check any new switch over an optional action.
 
 ## Testing
 
