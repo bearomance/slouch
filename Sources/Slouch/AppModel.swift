@@ -41,6 +41,12 @@ final class AppModel: ObservableObject {
                 if self.source.isConnected { self.isReconnecting = false }
             }
         }
+
+        _ = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.recheckPermission() }
+            }
     }
 
     private func applyConfig() {
