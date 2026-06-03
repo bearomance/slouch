@@ -66,6 +66,50 @@ public extension KeyStroke {
         122: "F1", 120: "F2", 99: "F3", 118: "F4", 96: "F5", 97: "F6",
         98: "F7", 100: "F8", 101: "F9", 109: "F10", 103: "F11", 111: "F12",
     ]
+
+    /// Parses a typed key combo like "F6", "cmd+shift+space", or "⇧⌘Space".
+    /// Returns nil if no key (or an unknown key) is present.
+    static func parse(_ text: String) -> KeyStroke? {
+        var mods: ModifierFlags = []
+        var rest = Substring(text.trimmingCharacters(in: .whitespaces))
+
+        symbols: while let c = rest.first {
+            switch c {
+            case "⌃": mods.insert(.control); rest.removeFirst()
+            case "⌥": mods.insert(.option); rest.removeFirst()
+            case "⇧": mods.insert(.shift); rest.removeFirst()
+            case "⌘": mods.insert(.command); rest.removeFirst()
+            default: break symbols
+            }
+        }
+
+        var keyToken: String?
+        for token in rest.split(whereSeparator: { $0 == "+" || $0 == " " }) {
+            switch token.lowercased() {
+            case "cmd", "command": mods.insert(.command)
+            case "shift": mods.insert(.shift)
+            case "opt", "option", "alt": mods.insert(.option)
+            case "ctrl", "control": mods.insert(.control)
+            default:
+                guard keyToken == nil else { return nil }
+                keyToken = String(token)
+            }
+        }
+        guard let keyToken, let code = nameToCode[keyToken.lowercased()] else { return nil }
+        return KeyStroke(keyCode: code, modifiers: mods)
+    }
+
+    private static let nameToCode: [String: UInt16] = {
+        var map: [String: UInt16] = [:]
+        for (code, name) in knownKeyNames { map[name.lowercased()] = code }
+        let aliases: [String: UInt16] = [
+            "space": 49, "esc": 53, "escape": 53, "enter": 36, "return": 36,
+            "tab": 48, "delete": 51, "backspace": 51,
+            "up": 126, "down": 125, "left": 123, "right": 124,
+        ]
+        map.merge(aliases) { current, _ in current }
+        return map
+    }()
 }
 
 /// What the engine asks the synthesizer to do. `dy` positive = screen-down.
