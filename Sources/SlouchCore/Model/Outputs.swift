@@ -47,10 +47,8 @@ public extension ModifierFlags {
 
 public extension KeyStroke {
     var displayString: String {
-        symbolString(of: modifiers) + KeyStroke.keyName(for: keyCode)
+        modifiers.symbolString + KeyStroke.keyName(for: keyCode)
     }
-
-    private func symbolString(of mods: ModifierFlags) -> String { mods.symbolString }
 
     static func keyName(for code: UInt16) -> String {
         knownKeyNames[code] ?? "key \(code)"
@@ -63,6 +61,10 @@ public extension KeyStroke {
         31: "O", 32: "U", 34: "I", 35: "P", 37: "L", 38: "J", 40: "K", 45: "N", 46: "M",
         36: "↩", 48: "⇥", 49: "Space", 51: "⌫", 53: "⎋",
         123: "←", 124: "→", 125: "↓", 126: "↑",
+        24: "=", 27: "-", 30: "]", 33: "[", 39: "'", 41: ";", 42: "\\",
+        43: ",", 44: "/", 47: ".", 50: "`",
+        122: "F1", 120: "F2", 99: "F3", 118: "F4", 96: "F5", 97: "F6",
+        98: "F7", 100: "F8", 101: "F9", 109: "F10", 103: "F11", 111: "F12",
     ]
 }
 

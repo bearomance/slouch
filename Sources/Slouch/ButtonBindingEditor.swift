@@ -120,11 +120,16 @@ struct KeyRecorderButton: View {
             recording ? cancel() : start()
         }
         .frame(minWidth: 100)
+        .onDisappear { cancel() }
     }
 
     private func start() {
         recording = true
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 53 { // Esc cancels recording without binding
+                cancel()
+                return nil
+            }
             stroke = KeyStroke(keyCode: event.keyCode,
                                modifiers: modifierFlags(from: event.modifierFlags))
             cancel()
