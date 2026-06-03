@@ -29,7 +29,7 @@ struct SettingsView: View {
                     Text("Off").tag(StickRole.none)
                 }
             }
-            // The "Buttons" section is added in Task 12.
+            ButtonsSection(model: model)
         }
         .padding()
         .frame(width: 420)
