@@ -17,16 +17,23 @@ public final class MappingStore {
 
     public func load() -> Config {
         guard let data = try? Data(contentsOf: fileURL),
-              let config = try? JSONDecoder().decode(Config.self, from: data) else {
+              let config = try? Self.decode(data) else {
             return .default
         }
         return config
     }
 
     public func save(_ config: Config) throws {
+        try Self.encode(config).write(to: fileURL, options: .atomic)
+    }
+
+    public static func encode(_ config: Config) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(config)
-        try data.write(to: fileURL, options: .atomic)
+        return try encoder.encode(config)
+    }
+
+    public static func decode(_ data: Data) throws -> Config {
+        try JSONDecoder().decode(Config.self, from: data)
     }
 }

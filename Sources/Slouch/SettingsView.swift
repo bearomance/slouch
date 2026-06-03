@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import SlouchCore
 
 struct SettingsView: View {
@@ -71,8 +72,50 @@ struct GeneralTab: View {
                     Text("Off").tag(StickRole.none)
                 }
             }
+            Section("Configuration") {
+                LabeledContent {
+                    HStack {
+                        Button("Import") { importConfig() }
+                        Button("Export") { exportConfig() }
+                    }
+                } label: {
+                    Text("Backup")
+                    Text("Save the full configuration to a file, or restore one")
+                }
+            }
         }
         .formStyle(.grouped)
+    }
+
+    private func exportConfig() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = "Slouch-config.json"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try MappingStore.encode(model.config).write(to: url, options: .atomic)
+        } catch {
+            showAlert("Export failed", error.localizedDescription)
+        }
+    }
+
+    private func importConfig() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            model.config = try MappingStore.decode(try Data(contentsOf: url))
+        } catch {
+            showAlert("Import failed", "Not a valid Slouch configuration file. Your current configuration is unchanged.")
+        }
+    }
+
+    private func showAlert(_ title: String, _ message: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.runModal()
     }
 }
 

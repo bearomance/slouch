@@ -31,6 +31,30 @@ final class MappingStoreTests: XCTestCase {
         XCTAssertTrue(loaded.settings.enableOnLaunch)
     }
 
+    func test_encodeThenDecode_roundTrips() throws {
+        var config = Config.default
+        config.settings.cursorSpeed = 2200
+        config.mapping.buttons[.x] = .openURL("https://example.com")
+
+        let decoded = try MappingStore.decode(MappingStore.encode(config))
+        XCTAssertEqual(decoded, config)
+    }
+
+    func test_decodeMalformedData_throws() {
+        XCTAssertThrowsError(try MappingStore.decode(Data("not json".utf8)))
+    }
+
+    func test_decodeLegacyExport_succeeds() throws {
+        let legacy = """
+        {
+          "mapping" : { "buttons" : [], "leftStick" : "scroll", "rightStick" : "mouseMove" },
+          "settings" : { "cursorSpeed" : 1400, "deadZone" : 0.05, "scrollSpeed" : 30 }
+        }
+        """
+        let decoded = try MappingStore.decode(Data(legacy.utf8))
+        XCTAssertTrue(decoded.settings.enableOnLaunch)
+    }
+
     func test_saveThenLoad_roundTrips() throws {
         let dir = tempDir()
         let store = MappingStore(directory: dir)
