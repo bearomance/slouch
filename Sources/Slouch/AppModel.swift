@@ -83,4 +83,8 @@ final class AppModel: ObservableObject {
         displayLink = nil
         lastTick = 0
     }
+
+    deinit {
+        if let link = displayLink { CVDisplayLinkStop(link) }
+    }
 }

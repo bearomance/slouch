@@ -10,11 +10,14 @@ final class GCGamepadSource: GamepadSource {
     init() {
         bind()
         NotificationCenter.default.addObserver(
-            self, selector: #selector(connected),
-            name: .GCControllerDidConnect, object: nil)
+            forName: .GCControllerDidConnect, object: nil, queue: .main) { [weak self] _ in
+            self?.bind()
+        }
         NotificationCenter.default.addObserver(
-            self, selector: #selector(disconnected),
-            name: .GCControllerDidDisconnect, object: nil)
+            forName: .GCControllerDidDisconnect, object: nil, queue: .main) { [weak self] _ in
+            self?.controller = nil
+            self?.onConnectionChange?(false)
+        }
     }
 
     private func bind() {
@@ -27,12 +30,6 @@ final class GCGamepadSource: GamepadSource {
         bind()
         // Restart wireless discovery in case the link came back without a connect event.
         GCController.startWirelessControllerDiscovery {}
-    }
-
-    @objc private func connected() { bind() }
-    @objc private func disconnected() {
-        controller = nil
-        onConnectionChange?(false)
     }
 
     func currentState() -> GamepadState {
