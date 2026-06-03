@@ -1477,7 +1477,7 @@ private func kind(of action: OutputAction?) -> ActionKind {
     case .mouseClick(.middle): return .middleClick
     case .keystroke: return .key
     case .sleep: return .sleep
-    case .none, nil: return .none
+    case .some(.none), nil: return .none // OutputAction.none vs Optional.none
     }
 }
 
