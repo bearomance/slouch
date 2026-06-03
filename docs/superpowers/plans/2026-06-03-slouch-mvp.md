@@ -595,14 +595,14 @@ public final class MappingEngine {
             case .mouseClick(let b): commands.append(.mouseDown(b))
             case .keystroke(let k): commands.append(.keyDown(k))
             case .sleep: commands.append(.sleep)
-            case .none, nil: break
+            case OutputAction.none?, nil: break // OutputAction.none collides with Optional.none
             }
         }
         for button in justReleased {
             switch mapping.buttons[button] {
             case .mouseClick(let b): commands.append(.mouseUp(b))
             case .keystroke(let k): commands.append(.keyUp(k))
-            case .sleep, .none, nil: break
+            case .sleep, OutputAction.none?, nil: break
             }
         }
         return commands
