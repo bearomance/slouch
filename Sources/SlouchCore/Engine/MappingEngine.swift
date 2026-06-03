@@ -12,9 +12,36 @@ public final class MappingEngine {
 
     public func process(state: GamepadState, dt: Double) -> [SynthCommand] {
         var commands: [SynthCommand] = []
+        commands.append(contentsOf: stickCommands(state: state, dt: dt))
         commands.append(contentsOf: buttonCommands(state: state))
         previouslyPressed = state.pressed
         return commands
+    }
+
+    private func stickCommands(state: GamepadState, dt: Double) -> [SynthCommand] {
+        var commands: [SynthCommand] = []
+        commands.append(contentsOf: stickCommand(role: mapping.leftStick, raw: state.leftStick, dt: dt))
+        commands.append(contentsOf: stickCommand(role: mapping.rightStick, raw: state.rightStick, dt: dt))
+        return commands
+    }
+
+    private func stickCommand(role: StickRole, raw: StickVector, dt: Double) -> [SynthCommand] {
+        let v = applyRadialDeadzone(raw, deadZone: settings.deadZone)
+        let mag = v.magnitude
+        guard mag > 0 else { return [] }
+        let unitX = v.x / mag
+        let unitY = v.y / mag
+        let speed = curvedSpeed(magnitude: mag)
+        switch role {
+        case .mouseMove:
+            let s = speed * settings.cursorSpeed * dt
+            return [.moveMouse(dx: unitX * s, dy: -unitY * s)]
+        case .scroll:
+            let s = speed * settings.scrollSpeed * dt
+            return [.scroll(dx: unitX * s, dy: -unitY * s)]
+        case .none:
+            return []
+        }
     }
 
     private func buttonCommands(state: GamepadState) -> [SynthCommand] {

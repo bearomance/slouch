@@ -42,4 +42,37 @@ final class MappingEngineTests: XCTestCase {
         XCTAssertTrue(down.contains(.sleep))
         XCTAssertFalse(held.contains(.sleep))
     }
+
+    func test_rightStickFullRight_movesCursorRight() {
+        let engine = makeEngine()
+        let dt = 0.5
+        let cmds = engine.process(state: GamepadState(rightStick: StickVector(x: 1, y: 0)), dt: dt)
+        // speed at full = cursorSpeed (1400) * curvedSpeed(1)=1 * dt(0.5) = 700
+        guard case let .moveMouse(dx, dy)? = cmds.first(where: { if case .moveMouse = $0 { return true }; return false }) else {
+            return XCTFail("expected moveMouse")
+        }
+        XCTAssertEqual(dx, 700, accuracy: 1e-6)
+        XCTAssertEqual(dy, 0, accuracy: 1e-6)
+    }
+
+    func test_rightStickUp_movesCursorUp_negativeDy() {
+        let engine = makeEngine()
+        let cmds = engine.process(state: GamepadState(rightStick: StickVector(x: 0, y: 1)), dt: 0.5)
+        guard case let .moveMouse(_, dy)? = cmds.first(where: { if case .moveMouse = $0 { return true }; return false }) else {
+            return XCTFail("expected moveMouse")
+        }
+        XCTAssertLessThan(dy, 0)
+    }
+
+    func test_rightStickInsideDeadzone_emitsNoMove() {
+        let engine = makeEngine()
+        let cmds = engine.process(state: GamepadState(rightStick: StickVector(x: 0.02, y: 0)), dt: 0.5)
+        XCTAssertFalse(cmds.contains { if case .moveMouse = $0 { return true }; return false })
+    }
+
+    func test_leftStickDown_scrolls() {
+        let engine = makeEngine()
+        let cmds = engine.process(state: GamepadState(leftStick: StickVector(x: 0, y: -1)), dt: 0.5)
+        XCTAssertTrue(cmds.contains { if case .scroll = $0 { return true }; return false })
+    }
 }
