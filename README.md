@@ -35,7 +35,7 @@ and the controller works immediately — no manual reconnect.
 
 ## Requirements
 
-- macOS 13 (Ventura) or later.
+- macOS 14 (Sonoma) or later.
 - A game controller that macOS recognizes as a standard controller. Most modern
   Bluetooth controllers (Xbox-compatible, DualSense, etc.) work, since input is
   read through Apple's GameController framework.
@@ -53,8 +53,17 @@ re-binds the controller automatically. See the
 
 ## Building
 
-A native Swift / SwiftUI app, built with Xcode. (Build instructions will be added
-as the project structure lands.)
+A native Swift / SwiftUI app built with SwiftPM (no Xcode project required).
+
+```sh
+swift test          # run the unit suite
+./Scripts/build-app.sh   # build a signed Slouch.app menu-bar bundle
+```
+
+`build-app.sh` produces `./Slouch.app`. Launch it, then grant **Accessibility**
+in System Settings ▸ Privacy & Security ▸ Accessibility so it can move the mouse
+and send keys. Because the bundle is ad-hoc signed, macOS may re-prompt for
+Accessibility after a rebuild.
 
 No API keys, secrets, or network access are required — Slouch runs entirely
 locally on free Apple frameworks.
