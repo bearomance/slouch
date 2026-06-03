@@ -21,6 +21,7 @@ private enum ActionCategory: String, CaseIterable, Identifiable {
 
 private enum FunctionKind: String, CaseIterable, Identifiable {
     case sleep = "Sleep"
+    case openURL = "Open URL"
     var id: String { rawValue }
 }
 
@@ -28,7 +29,7 @@ private func category(of action: OutputAction?) -> ActionCategory {
     switch action {
     case .mouseClick: return .mouse
     case .keystroke: return .keyboard
-    case .sleep: return .function
+    case .openURL, .sleep: return .function
     case .some(.none), nil: return .off
     }
 }
@@ -97,11 +98,17 @@ struct ButtonBindingRow: View {
                 KeyRecorderButton(stroke: keystrokeBinding)
             }
         case .function:
-            Picker("", selection: functionBinding) {
-                ForEach(FunctionKind.allCases) { Text($0.rawValue).tag($0) }
+            HStack(spacing: 6) {
+                Picker("", selection: functionBinding) {
+                    ForEach(FunctionKind.allCases) { Text($0.rawValue).tag($0) }
+                }
+                .labelsHidden()
+                .frame(width: 110)
+                if case .openURL? = action {
+                    URLField(urlString: urlBinding)
+                        .frame(width: 184)
+                }
             }
-            .labelsHidden()
-            .frame(width: 160)
         }
     }
 
@@ -136,8 +143,21 @@ struct ButtonBindingRow: View {
 
     private var functionBinding: Binding<FunctionKind> {
         Binding(
-            get: { .sleep },
-            set: { _ in action = .sleep }
+            get: { if case .openURL? = action { return .openURL }; return .sleep },
+            set: { kind in
+                switch kind {
+                case .sleep: action = .sleep
+                case .openURL:
+                    if case .openURL? = action {} else { action = .openURL("https://www.bilibili.com") }
+                }
+            }
+        )
+    }
+
+    private var urlBinding: Binding<String> {
+        Binding(
+            get: { if case .openURL(let u)? = action { return u }; return "" },
+            set: { action = .openURL($0) }
         )
     }
 
@@ -168,6 +188,30 @@ struct KeyComboField: View {
                 if let parsed = KeyStroke.parse(text) { stroke = parsed }
                 text = stroke.displayString
             }
+    }
+}
+
+/// URL entry; commits on ⏎ or focus loss.
+struct URLField: View {
+    @Binding var urlString: String
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        TextField("", text: $text, prompt: Text("https://…"))
+            .labelsHidden()
+            .textFieldStyle(.roundedBorder)
+            .focused($focused)
+            .onAppear { text = urlString }
+            .onChange(of: urlString) { _, newValue in text = newValue }
+            .onSubmit { commit() }
+            .onChange(of: focused) { _, isFocused in
+                if !isFocused { commit() }
+            }
+    }
+
+    private func commit() {
+        urlString = text.trimmingCharacters(in: .whitespaces)
     }
 }
 

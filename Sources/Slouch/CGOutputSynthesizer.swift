@@ -15,7 +15,7 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         case let .mouseUp(button): mouseButton(button, down: false)
         case let .keyDown(stroke): key(stroke, down: true)
         case let .keyUp(stroke): key(stroke, down: false)
-        case .sleep: break // handled by SystemActions, not the synthesizer
+        case .openURL, .sleep: break // handled by SystemActions, not the synthesizer
         }
     }
 

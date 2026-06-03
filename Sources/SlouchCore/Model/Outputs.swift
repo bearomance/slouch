@@ -29,6 +29,7 @@ public enum StickRole: String, Codable, Equatable, Sendable {
 public enum OutputAction: Codable, Equatable, Sendable {
     case mouseClick(MouseButton)
     case keystroke(KeyStroke)
+    case openURL(String)
     case sleep
     case none
 }
@@ -120,5 +121,6 @@ public enum SynthCommand: Equatable, Sendable {
     case mouseUp(MouseButton)
     case keyDown(KeyStroke)
     case keyUp(KeyStroke)
+    case openURL(String)
     case sleep
 }

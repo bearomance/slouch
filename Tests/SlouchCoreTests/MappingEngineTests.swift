@@ -35,6 +35,16 @@ final class MappingEngineTests: XCTestCase {
         XCTAssertTrue(up.contains(.keyUp(stroke)))
     }
 
+    func test_openURLButton_emitsOnPressOnly() {
+        var mapping = Mapping.couchDefault
+        mapping.buttons[.x] = .openURL("https://www.bilibili.com")
+        let engine = MappingEngine(mapping: mapping, settings: .default)
+        let down = engine.process(state: GamepadState(pressed: [.x]), dt: 1.0 / 60)
+        let held = engine.process(state: GamepadState(pressed: [.x]), dt: 1.0 / 60)
+        XCTAssertTrue(down.contains(.openURL("https://www.bilibili.com")))
+        XCTAssertFalse(held.contains(.openURL("https://www.bilibili.com")))
+    }
+
     func test_sleepButton_emitsSleepOnPressOnly() {
         let engine = makeEngine()
         let down = engine.process(state: GamepadState(pressed: [.menu]), dt: 1.0 / 60)

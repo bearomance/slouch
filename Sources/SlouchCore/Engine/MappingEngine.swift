@@ -53,6 +53,7 @@ public final class MappingEngine {
             switch mapping.buttons[button] {
             case .mouseClick(let b): commands.append(.mouseDown(b))
             case .keystroke(let k): commands.append(.keyDown(k))
+            case .openURL(let url): commands.append(.openURL(url))
             case .sleep: commands.append(.sleep)
             case OutputAction.none?, nil: break
             }
@@ -61,7 +62,7 @@ public final class MappingEngine {
             switch mapping.buttons[button] {
             case .mouseClick(let b): commands.append(.mouseUp(b))
             case .keystroke(let k): commands.append(.keyUp(k))
-            case .sleep, OutputAction.none?, nil: break
+            case .sleep, .openURL, OutputAction.none?, nil: break
             }
         }
         return commands

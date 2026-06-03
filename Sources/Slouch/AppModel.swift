@@ -75,7 +75,11 @@ final class AppModel: ObservableObject {
         lastTick = now
         let commands = engine.process(state: source.currentState(), dt: dt)
         for command in commands {
-            if case .sleep = command { SystemActions.sleep() } else { synth.perform(command) }
+            switch command {
+            case .sleep: SystemActions.sleep()
+            case .openURL(let url): SystemActions.open(urlString: url)
+            default: synth.perform(command)
+            }
         }
     }
 

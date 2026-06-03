@@ -18,6 +18,12 @@ final class MappingModelTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
+    func test_openURL_roundTripsThroughJSON() throws {
+        let action = OutputAction.openURL("https://www.bilibili.com")
+        let data = try JSONEncoder().encode(action)
+        XCTAssertEqual(try JSONDecoder().decode(OutputAction.self, from: data), action)
+    }
+
     func test_keystroke_roundTripsWithModifiers() throws {
         let stroke = KeyStroke(keyCode: 49, modifiers: [.command, .shift])
         let action = OutputAction.keystroke(stroke)
