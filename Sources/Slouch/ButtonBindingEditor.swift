@@ -37,7 +37,7 @@ private func category(of action: OutputAction?) -> ActionCategory {
 struct ButtonsTab: View {
     @ObservedObject var model: AppModel
     private let buttons: [ButtonID] = [
-        .a, .b, .x, .y, .lb, .rb, .lt, .rt, .l3, .r3, .menu, .options,
+        .a, .b, .x, .y, .lb, .rb, .lt, .rt, .menu, .options,
         .dpadUp, .dpadDown, .dpadLeft, .dpadRight,
     ]
 
