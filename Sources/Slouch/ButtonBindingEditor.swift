@@ -22,6 +22,7 @@ private enum ActionCategory: String, CaseIterable, Identifiable {
 private enum FunctionKind: String, CaseIterable, Identifiable {
     case sleep = "Sleep"
     case openURL = "Open URL"
+    case keyboardViewer = "Keyboard Viewer"
     var id: String { rawValue }
 }
 
@@ -29,7 +30,7 @@ private func category(of action: OutputAction?) -> ActionCategory {
     switch action {
     case .mouseClick: return .mouse
     case .keystroke: return .keyboard
-    case .openURL, .sleep: return .function
+    case .openURL, .sleep, .keyboardViewer: return .function
     case .some(.none), nil: return .off
     }
 }
@@ -50,6 +51,10 @@ struct ButtonsTab: View {
             }
         }
         .formStyle(.grouped)
+        .contentShape(Rectangle())
+        // Clicking empty form area doesn't resign first responder on macOS;
+        // do it by hand so text fields lose their focus ring.
+        .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
     }
 
     private func binding(for button: ButtonID) -> Binding<OutputAction?> {
@@ -143,10 +148,17 @@ struct ButtonBindingRow: View {
 
     private var functionBinding: Binding<FunctionKind> {
         Binding(
-            get: { if case .openURL? = action { return .openURL }; return .sleep },
+            get: {
+                switch action {
+                case .openURL?: return .openURL
+                case .keyboardViewer?: return .keyboardViewer
+                default: return .sleep
+                }
+            },
             set: { kind in
                 switch kind {
                 case .sleep: action = .sleep
+                case .keyboardViewer: action = .keyboardViewer
                 case .openURL:
                     if case .openURL? = action {} else { action = .openURL("https://www.bilibili.com") }
                 }
@@ -177,17 +189,24 @@ struct ButtonBindingRow: View {
 struct KeyComboField: View {
     @Binding var stroke: KeyStroke
     @State private var text = ""
+    @FocusState private var focused: Bool
 
     var body: some View {
         TextField("", text: $text, prompt: Text("cmd+shift+space"))
             .labelsHidden()
             .textFieldStyle(.roundedBorder)
+            .focused($focused)
             .onAppear { text = stroke.displayString }
             .onChange(of: stroke) { _, newStroke in text = newStroke.displayString }
-            .onSubmit {
-                if let parsed = KeyStroke.parse(text) { stroke = parsed }
-                text = stroke.displayString
+            .onSubmit { commit() }
+            .onChange(of: focused) { _, isFocused in
+                if !isFocused { commit() }
             }
+    }
+
+    private func commit() {
+        if let parsed = KeyStroke.parse(text) { stroke = parsed }
+        text = stroke.displayString
     }
 }
 

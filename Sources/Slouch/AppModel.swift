@@ -93,8 +93,18 @@ final class AppModel: ObservableObject {
         let commands = engine.process(state: source.currentState(), dt: dt)
         for command in commands {
             switch command {
-            case .sleep: SystemActions.sleep()
+            // Slight delay so trailing HID reports (e.g. an analog trigger
+            // settling back) don't wake the Mac right after it sleeps.
+            case .sleep:
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { SystemActions.sleep() }
             case .openURL(let url): SystemActions.open(urlString: url)
+            // ⌥⌘F5 is the system accessibility-shortcut toggle; with only
+            // "Accessibility Keyboard" checked in Settings ▸ Accessibility ▸
+            // Shortcut it toggles the on-screen keyboard directly.
+            case .keyboardViewer:
+                let stroke = KeyStroke(keyCode: 96, modifiers: [.command, .option])
+                synth.perform(.keyDown(stroke))
+                synth.perform(.keyUp(stroke))
             default: synth.perform(command)
             }
         }

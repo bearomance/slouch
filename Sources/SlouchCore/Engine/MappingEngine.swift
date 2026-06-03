@@ -54,15 +54,18 @@ public final class MappingEngine {
             case .mouseClick(let b): commands.append(.mouseDown(b))
             case .keystroke(let k): commands.append(.keyDown(k))
             case .openURL(let url): commands.append(.openURL(url))
-            case .sleep: commands.append(.sleep)
-            case OutputAction.none?, nil: break
+            case .keyboardViewer: commands.append(.keyboardViewer)
+            case .sleep, OutputAction.none?, nil: break
             }
         }
         for button in justReleased {
             switch mapping.buttons[button] {
             case .mouseClick(let b): commands.append(.mouseUp(b))
             case .keystroke(let k): commands.append(.keyUp(k))
-            case .sleep, .openURL, OutputAction.none?, nil: break
+            // Sleep fires on release: triggering on press lets the release
+            // HID report wake the Mac right back up.
+            case .sleep: commands.append(.sleep)
+            case .openURL, .keyboardViewer, OutputAction.none?, nil: break
             }
         }
         return commands

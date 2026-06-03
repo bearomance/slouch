@@ -31,6 +31,7 @@ public enum OutputAction: Codable, Equatable, Sendable {
     case keystroke(KeyStroke)
     case openURL(String)
     case sleep
+    case keyboardViewer
     case none
 }
 
@@ -85,7 +86,8 @@ public extension KeyStroke {
         }
 
         var keyToken: String?
-        for token in rest.split(whereSeparator: { $0 == "+" || $0 == " " }) {
+        // "＋" is what CJK input methods produce for plus.
+        for token in rest.split(whereSeparator: { $0 == "+" || $0 == "＋" || $0 == " " }) {
             switch token.lowercased() {
             case "cmd", "command": mods.insert(.command)
             case "shift": mods.insert(.shift)
@@ -123,4 +125,5 @@ public enum SynthCommand: Equatable, Sendable {
     case keyUp(KeyStroke)
     case openURL(String)
     case sleep
+    case keyboardViewer
 }

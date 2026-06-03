@@ -85,6 +85,10 @@ struct GeneralTab: View {
             }
         }
         .formStyle(.grouped)
+        .contentShape(Rectangle())
+        // Clicking empty form area doesn't resign first responder on macOS;
+        // do it by hand so text fields lose their focus ring.
+        .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
     }
 
     private func exportConfig() {

@@ -35,6 +35,7 @@ final class MappingStoreTests: XCTestCase {
         var config = Config.default
         config.settings.cursorSpeed = 2200
         config.mapping.buttons[.x] = .openURL("https://example.com")
+        config.mapping.buttons[.y] = .keyboardViewer
 
         let decoded = try MappingStore.decode(MappingStore.encode(config))
         XCTAssertEqual(decoded, config)

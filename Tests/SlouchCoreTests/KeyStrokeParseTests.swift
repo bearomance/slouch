@@ -6,6 +6,11 @@ final class KeyStrokeParseTests: XCTestCase {
         XCTAssertEqual(KeyStroke.parse("F6"), KeyStroke(keyCode: 97))
     }
 
+    func test_parsesFullWidthPlus_fromCJKInputMethod() {
+        XCTAssertEqual(KeyStroke.parse("cmd＋opt＋f5"),
+                       KeyStroke(keyCode: 96, modifiers: [.command, .option]))
+    }
+
     func test_parsesWordModifiers() {
         XCTAssertEqual(KeyStroke.parse("cmd+shift+space"),
                        KeyStroke(keyCode: 49, modifiers: [.command, .shift]))

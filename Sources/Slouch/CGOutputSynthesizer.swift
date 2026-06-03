@@ -15,7 +15,7 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         case let .mouseUp(button): mouseButton(button, down: false)
         case let .keyDown(stroke): key(stroke, down: true)
         case let .keyUp(stroke): key(stroke, down: false)
-        case .openURL, .sleep: break // handled by SystemActions, not the synthesizer
+        case .openURL, .sleep, .keyboardViewer: break // handled by SystemActions, not the synthesizer
         }
     }
 
@@ -83,9 +83,37 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         return flags
     }
 
+    // Real modifier key events (not just flags on the main key) — system-wide
+    // hotkeys like the ⌥⌘F5 accessibility toggle ignore flag-only synthesis.
+    private static let modifierKeyCodes: [(ModifierFlags, CGKeyCode)] = [
+        (.control, 59), (.option, 58), (.shift, 56), (.command, 55),
+    ]
+
     private func key(_ stroke: KeyStroke, down: Bool) {
-        let event = CGEvent(keyboardEventSource: nil, virtualKey: stroke.keyCode, keyDown: down)
-        event?.flags = cgFlags(stroke.modifiers)
+        let source = CGEventSource(stateID: .hidSystemState)
+        let flags = cgFlags(stroke.modifiers)
+        if down {
+            var accumulated: CGEventFlags = []
+            for (mod, code) in Self.modifierKeyCodes where stroke.modifiers.contains(mod) {
+                accumulated.insert(cgFlags(mod))
+                let e = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: true)
+                e?.type = .flagsChanged
+                e?.flags = accumulated
+                e?.post(tap: .cghidEventTap)
+            }
+        }
+        let event = CGEvent(keyboardEventSource: source, virtualKey: stroke.keyCode, keyDown: down)
+        event?.flags = flags
         event?.post(tap: .cghidEventTap)
+        if !down {
+            var remaining = flags
+            for (mod, code) in Self.modifierKeyCodes.reversed() where stroke.modifiers.contains(mod) {
+                remaining.remove(cgFlags(mod))
+                let e = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: false)
+                e?.type = .flagsChanged
+                e?.flags = remaining
+                e?.post(tap: .cghidEventTap)
+            }
+        }
     }
 }

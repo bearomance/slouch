@@ -45,12 +45,28 @@ final class MappingEngineTests: XCTestCase {
         XCTAssertFalse(held.contains(.openURL("https://www.bilibili.com")))
     }
 
-    func test_sleepButton_emitsSleepOnPressOnly() {
+    func test_keyboardViewerButton_emitsOnPressOnly() {
+        var mapping = Mapping.couchDefault
+        mapping.buttons[.x] = .keyboardViewer
+        let engine = MappingEngine(mapping: mapping, settings: .default)
+        let down = engine.process(state: GamepadState(pressed: [.x]), dt: 1.0 / 60)
+        let held = engine.process(state: GamepadState(pressed: [.x]), dt: 1.0 / 60)
+        let up = engine.process(state: GamepadState(pressed: []), dt: 1.0 / 60)
+        XCTAssertTrue(down.contains(.keyboardViewer))
+        XCTAssertFalse(held.contains(.keyboardViewer))
+        XCTAssertFalse(up.contains(.keyboardViewer))
+    }
+
+    func test_sleepButton_emitsSleepOnReleaseOnly() {
+        // On press the system would sleep and the button-release HID report
+        // would immediately wake it again — so sleep fires on release.
         let engine = makeEngine()
         let down = engine.process(state: GamepadState(pressed: [.menu]), dt: 1.0 / 60)
         let held = engine.process(state: GamepadState(pressed: [.menu]), dt: 1.0 / 60)
-        XCTAssertTrue(down.contains(.sleep))
+        let up = engine.process(state: GamepadState(pressed: []), dt: 1.0 / 60)
+        XCTAssertFalse(down.contains(.sleep))
         XCTAssertFalse(held.contains(.sleep))
+        XCTAssertTrue(up.contains(.sleep))
     }
 
     func test_rightStickFullRight_movesCursorRight() {
