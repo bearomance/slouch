@@ -4,6 +4,8 @@ import SlouchCore
 
 final class CGOutputSynthesizer: OutputSynthesizer {
     private var downButtons: Set<MouseButton> = []
+    private var scrollResidualX: Double = 0
+    private var scrollResidualY: Double = 0
 
     func perform(_ command: SynthCommand) {
         switch command {
@@ -47,8 +49,15 @@ final class CGOutputSynthesizer: OutputSynthesizer {
     }
 
     private func scroll(dx: Double, dy: Double) {
+        scrollResidualY += dy
+        scrollResidualX += dx
+        let wheelY = scrollResidualY.rounded(.towardZero)
+        let wheelX = scrollResidualX.rounded(.towardZero)
+        scrollResidualY -= wheelY
+        scrollResidualX -= wheelX
+        guard wheelY != 0 || wheelX != 0 else { return }
         let event = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 2,
-                            wheel1: Int32(dy.rounded()), wheel2: Int32(dx.rounded()), wheel3: 0)
+                            wheel1: Int32(wheelY), wheel2: Int32(wheelX), wheel3: 0)
         event?.post(tap: .cghidEventTap)
     }
 
