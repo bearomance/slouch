@@ -30,4 +30,10 @@ final class DeadzoneTests: XCTestCase {
         let out = applyRadialDeadzone(StickVector(x: 0.6, y: 0.8), deadZone: 0.0)
         XCTAssertEqual(out.x / out.y, 0.6 / 0.8, accuracy: 1e-6)
     }
+
+    func test_deadZoneAtOrAboveOne_returnsZeroOrFinite() {
+        let out = applyRadialDeadzone(StickVector(x: 1, y: 0), deadZone: 1.0)
+        XCTAssertTrue(out.x.isFinite)
+        XCTAssertTrue(out.y.isFinite)
+    }
 }

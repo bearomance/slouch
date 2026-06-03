@@ -1,6 +1,6 @@
 import Foundation
 
-public struct StickVector: Equatable {
+public struct StickVector: Equatable, Sendable {
     public var x: Double
     public var y: Double
     public init(x: Double, y: Double) {
@@ -23,7 +23,7 @@ public enum ButtonID: String, Codable, CaseIterable, Sendable {
     case dpadUp, dpadDown, dpadLeft, dpadRight
 }
 
-public struct GamepadState: Equatable {
+public struct GamepadState: Equatable, Sendable {
     public var leftStick: StickVector
     public var rightStick: StickVector
     public var pressed: Set<ButtonID>
