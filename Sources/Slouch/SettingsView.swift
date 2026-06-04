@@ -55,7 +55,7 @@ struct GeneralTab: View {
                             title: "Cursor speed", subtitle: "400 – 3000 px/s · Recommended 1400") {
                     SliderInputRow(value: $model.config.settings.cursorSpeed,
                                    range: 400...3000, step: 100,
-                                   format: .number.precision(.fractionLength(0)))
+                                   format: .number.precision(.fractionLength(0)).grouping(.never))
                 }
                 SettingsRow(color: .indigo, symbol: "arrow.up.and.down",
                             title: "Scroll speed", subtitle: "5 – 80 lines/s · Recommended 30") {

@@ -128,7 +128,7 @@ where F.FormatInput == Double, F.FormatOutput == String {
                 .controlSize(.small)
                 .frame(width: 190)
             ClickToEditTextField(text: $text, alignment: .center, onEndEditing: commit)
-                .frame(width: 56)
+                .frame(width: 68)
             Stepper("", value: $value, in: range, step: step)
                 .labelsHidden()
         }
