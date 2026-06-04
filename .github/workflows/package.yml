@@ -1,0 +1,39 @@
+name: Package
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        run: swift test
+
+      - name: Package Slouch.app
+        run: ./Scripts/build-app.sh
+
+      - name: Zip app bundle
+        run: ditto -c -k --keepParent Slouch.app Slouch.app.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Slouch.app
+          path: Slouch.app.zip
+
+      - name: Update rolling "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest Slouch.app.zip \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Latest build" \
+            --notes "Auto-built from \`${GITHUB_SHA:0:7}\`. Ad-hoc signed: grant Accessibility again after replacing the app."
