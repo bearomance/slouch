@@ -11,7 +11,7 @@ jobs:
   package:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Run tests
         run: swift test
@@ -22,7 +22,7 @@ jobs:
       - name: Zip app bundle
         run: ditto -c -k --keepParent Slouch.app Slouch.app.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Slouch.app
           path: Slouch.app.zip
