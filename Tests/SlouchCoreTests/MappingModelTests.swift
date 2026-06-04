@@ -24,6 +24,12 @@ final class MappingModelTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(OutputAction.self, from: data), action)
     }
 
+    func test_settingsWithoutInvertScroll_decodesToFalse() throws {
+        let json = #"{"cursorSpeed":1400,"scrollSpeed":30,"deadZone":0.05}"#
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(json.utf8))
+        XCTAssertFalse(decoded.invertScroll)
+    }
+
     func test_keystroke_roundTripsWithModifiers() throws {
         let stroke = KeyStroke(keyCode: 49, modifiers: [.command, .shift])
         let action = OutputAction.keystroke(stroke)

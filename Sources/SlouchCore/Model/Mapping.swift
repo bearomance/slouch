@@ -35,13 +35,15 @@ public struct Settings: Codable, Equatable, Sendable {
     public var scrollSpeed: Double   // lines/sec at full deflection
     public var deadZone: Double      // 0...0.5
     public var enableOnLaunch: Bool
+    public var invertScroll: Bool
 
     public init(cursorSpeed: Double = 1400, scrollSpeed: Double = 30, deadZone: Double = 0.05,
-                enableOnLaunch: Bool = true) {
+                enableOnLaunch: Bool = true, invertScroll: Bool = false) {
         self.cursorSpeed = cursorSpeed
         self.scrollSpeed = scrollSpeed
         self.deadZone = deadZone
         self.enableOnLaunch = enableOnLaunch
+        self.invertScroll = invertScroll
     }
 
     public init(from decoder: Decoder) throws {
@@ -49,8 +51,9 @@ public struct Settings: Codable, Equatable, Sendable {
         cursorSpeed = try c.decode(Double.self, forKey: .cursorSpeed)
         scrollSpeed = try c.decode(Double.self, forKey: .scrollSpeed)
         deadZone = try c.decode(Double.self, forKey: .deadZone)
-        // Absent in configs written before the field existed.
+        // Absent in configs written before the fields existed.
         enableOnLaunch = try c.decodeIfPresent(Bool.self, forKey: .enableOnLaunch) ?? true
+        invertScroll = try c.decodeIfPresent(Bool.self, forKey: .invertScroll) ?? false
     }
 
     public static let `default` = Settings()

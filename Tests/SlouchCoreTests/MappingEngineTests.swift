@@ -101,4 +101,39 @@ final class MappingEngineTests: XCTestCase {
         let cmds = engine.process(state: GamepadState(leftStick: StickVector(x: 0, y: -1)), dt: 0.5)
         XCTAssertTrue(cmds.contains { if case .scroll = $0 { return true }; return false })
     }
+
+    private func scrollCommand(_ cmds: [SynthCommand]) -> (dx: Double, dy: Double)? {
+        for cmd in cmds {
+            if case let .scroll(dx, dy) = cmd { return (dx, dy) }
+        }
+        return nil
+    }
+
+    func test_invertScroll_flipsVerticalDirection() {
+        var settings = Settings.default
+        settings.invertScroll = true
+        let engine = MappingEngine(mapping: .couchDefault, settings: settings)
+        let normal = makeEngine()
+        let state = GamepadState(leftStick: StickVector(x: 0, y: 1))
+        guard let inverted = scrollCommand(engine.process(state: state, dt: 0.5)),
+              let baseline = scrollCommand(normal.process(state: state, dt: 0.5)) else {
+            return XCTFail("expected scroll")
+        }
+        XCTAssertEqual(inverted.dy, -baseline.dy, accuracy: 1e-6)
+        XCTAssertNotEqual(baseline.dy, 0)
+    }
+
+    func test_invertScroll_leavesHorizontalUnchanged() {
+        var settings = Settings.default
+        settings.invertScroll = true
+        let engine = MappingEngine(mapping: .couchDefault, settings: settings)
+        let normal = makeEngine()
+        let state = GamepadState(leftStick: StickVector(x: 1, y: 0))
+        guard let inverted = scrollCommand(engine.process(state: state, dt: 0.5)),
+              let baseline = scrollCommand(normal.process(state: state, dt: 0.5)) else {
+            return XCTFail("expected scroll")
+        }
+        XCTAssertEqual(inverted.dx, baseline.dx, accuracy: 1e-6)
+        XCTAssertNotEqual(baseline.dx, 0)
+    }
 }

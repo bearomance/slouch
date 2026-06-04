@@ -38,7 +38,8 @@ public final class MappingEngine {
             return [.moveMouse(dx: unitX * s, dy: -unitY * s)]
         case .scroll:
             let s = speed * settings.scrollSpeed * dt
-            return [.scroll(dx: unitX * s, dy: -unitY * s)]
+            let direction: Double = settings.invertScroll ? 1 : -1
+            return [.scroll(dx: unitX * s, dy: direction * unitY * s)]
         case .none:
             return []
         }
