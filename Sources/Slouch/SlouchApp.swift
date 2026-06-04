@@ -40,11 +40,9 @@ func menuBarIcon(enabled: Bool, connected: Bool) -> NSImage {
                                     width: symbol.size.width, height: symbol.size.height)
             symbol.draw(in: symbolRect, from: .zero, operation: .sourceOver, fraction: 1)
         }
-        if connected {
-            NSColor.systemGreen.setFill()
-            NSBezierPath(ovalIn: NSRect(x: size.width - 5.5, y: size.height - 6,
-                                        width: 5.5, height: 5.5)).fill()
-        }
+        (connected ? NSColor.systemGreen : NSColor.systemYellow).setFill()
+        NSBezierPath(ovalIn: NSRect(x: size.width - 5.5, y: size.height - 6,
+                                    width: 5.5, height: 5.5)).fill()
         return true
     }
     image.isTemplate = false
@@ -59,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 struct MenuContent: View {
     @ObservedObject var model: AppModel
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         Toggle("Enabled", isOn: $model.isEnabled)
@@ -70,12 +69,15 @@ struct MenuContent: View {
         }
         if !model.isTrusted {
             Text("⚠︎ Accessibility permission needed")
-            Button("Open Accessibility Settings…") {
+            Button("Open Accessibility Settings") {
                 PermissionsManager.openAccessibilitySettings()
             }
         }
         Divider()
-        SettingsLink { Text("Settings…") }
+        Button("Settings") {
+            openSettings()
+            bringToFront()
+        }
         Button("Quit Slouch") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }

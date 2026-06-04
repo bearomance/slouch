@@ -55,6 +55,10 @@ struct ButtonsTab: View {
         // Clicking empty form area doesn't resign first responder on macOS;
         // do it by hand so text fields lose their focus ring.
         .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
+        // AppKit auto-focuses the first text field when the tab appears.
+        .onAppear {
+            DispatchQueue.main.async { NSApp.keyWindow?.makeFirstResponder(nil) }
+        }
     }
 
     private func binding(for button: ButtonID) -> Binding<OutputAction?> {
@@ -70,17 +74,19 @@ struct ButtonBindingRow: View {
     @Binding var action: OutputAction?
 
     var body: some View {
-        LabeledContent(label(button)) {
-            HStack(spacing: 8) {
-                Picker("", selection: categoryBinding) {
-                    ForEach(ActionCategory.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .labelsHidden()
-                .frame(width: 120)
-
-                detail
-                    .frame(width: 300, alignment: .leading)
+        HStack(spacing: 8) {
+            Text(label(button))
+                .frame(width: 80, alignment: .leading)
+            Picker("", selection: categoryBinding) {
+                ForEach(ActionCategory.allCases) { Text($0.rawValue).tag($0) }
             }
+            .labelsHidden()
+            .fixedSize()
+            .frame(width: 120, alignment: .leading)
+
+            detail
+                .frame(width: 300, alignment: .leading)
+            Spacer(minLength: 0)
         }
     }
 
@@ -95,7 +101,8 @@ struct ButtonBindingRow: View {
                 Text("Middle click").tag(MouseButton.middle)
             }
             .labelsHidden()
-            .frame(width: 160)
+            .fixedSize()
+            .frame(width: 160, alignment: .leading)
         case .keyboard:
             HStack(spacing: 6) {
                 KeyComboField(stroke: keystrokeBinding)
@@ -108,10 +115,11 @@ struct ButtonBindingRow: View {
                     ForEach(FunctionKind.allCases) { Text($0.rawValue).tag($0) }
                 }
                 .labelsHidden()
-                .frame(width: 110)
+                .fixedSize()
+                .frame(width: 150, alignment: .leading)
                 if case .openURL? = action {
                     URLField(urlString: urlBinding)
-                        .frame(width: 184)
+                        .frame(width: 144)
                 }
             }
         }

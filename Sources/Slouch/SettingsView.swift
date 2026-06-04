@@ -16,15 +16,16 @@ struct SettingsView: View {
         .onAppear { bringToFront() }
     }
 
-    /// Accessory apps aren't activated when the Settings window opens, so it
-    /// would otherwise appear behind the frontmost app.
-    private func bringToFront() {
-        NSApp.activate(ignoringOtherApps: true)
-        DispatchQueue.main.async {
-            NSApp.windows
-                .first { $0.identifier?.rawValue.contains("Settings") == true }?
-                .makeKeyAndOrderFront(nil)
-        }
+}
+
+/// Accessory apps aren't activated when the Settings window opens, so it
+/// would otherwise appear (or stay) behind the frontmost app.
+func bringToFront() {
+    NSApp.activate(ignoringOtherApps: true)
+    DispatchQueue.main.async {
+        NSApp.windows
+            .first { $0.identifier?.rawValue.contains("Settings") == true }?
+            .makeKeyAndOrderFront(nil)
     }
 }
 
