@@ -182,7 +182,7 @@ struct ButtonBindingRow: View {
                 .frame(width: 158, alignment: .leading)
 
             trailingCell
-                .frame(width: 72, alignment: .leading)
+                .frame(width: 84, alignment: .leading)
         }
         .padding(.vertical, 2)
     }
@@ -343,15 +343,19 @@ struct KeyRecorderButton: View {
     @State private var monitor: Any?
 
     var body: some View {
-        Button(recording ? "Press key" : "Record") {
-            recording ? cancel() : start()
-        }
-        .onDisappear { cancel() }
+        Button(recording ? "Press key" : "Record") { start() }
+            .disabled(recording)
+            .onDisappear { cancel() }
     }
 
     private func start() {
         recording = true
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+        let events: NSEvent.EventTypeMask = [.keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown]
+        monitor = NSEvent.addLocalMonitorForEvents(matching: events) { event in
+            guard event.type == .keyDown else {
+                cancel() // any click elsewhere abandons recording
+                return event
+            }
             if event.keyCode == 53 { // Esc cancels recording without binding
                 cancel()
                 return nil
