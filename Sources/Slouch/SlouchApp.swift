@@ -13,10 +13,25 @@ struct SlouchApp: App {
         }
         .menuBarExtraStyle(.menu)
 
-        Settings {
-            SettingsView(model: model)
+        Window("General", id: SettingsWindowID.general) {
+            GeneralTab(model: model)
+                .frame(width: 600, height: 800)
+                .closesOnEscape()
+                .onAppear { bringToFront(id: SettingsWindowID.general) }
+        }
+
+        Window("Buttons", id: SettingsWindowID.buttons) {
+            ButtonsTab(model: model)
+                .frame(width: 700, height: 850)
+                .closesOnEscape()
+                .onAppear { bringToFront(id: SettingsWindowID.buttons) }
         }
     }
+}
+
+enum SettingsWindowID {
+    static let general = "general-setting"
+    static let buttons = "button-setting"
 }
 
 /// Composite icon: gamecontroller symbol plus a green dot when the controller
@@ -57,13 +72,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 struct MenuContent: View {
     @ObservedObject var model: AppModel
-    @Environment(\.openSettings) private var openSettings
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         Toggle("Enabled", isOn: $model.isEnabled)
         Divider()
         if model.isReconnecting && !model.isConnected {
-            Text("Controller: reconnecting…")
+            Text("Controller: reconnecting")
         } else {
             Text(model.isConnected ? "Controller: connected" : "Controller: not found")
         }
@@ -74,9 +89,13 @@ struct MenuContent: View {
             }
         }
         Divider()
-        Button("Settings") {
-            openSettings()
-            bringToFront()
+        Button("General Setting") {
+            openWindow(id: SettingsWindowID.general)
+            bringToFront(id: SettingsWindowID.general)
+        }
+        Button("Button Setting") {
+            openWindow(id: SettingsWindowID.buttons)
+            bringToFront(id: SettingsWindowID.buttons)
         }
         Button("Quit Slouch") { NSApp.terminate(nil) }
             .keyboardShortcut("q")

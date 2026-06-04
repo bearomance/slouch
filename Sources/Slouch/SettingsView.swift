@@ -2,30 +2,38 @@ import SwiftUI
 import UniformTypeIdentifiers
 import SlouchCore
 
-struct SettingsView: View {
-    @ObservedObject var model: AppModel
+/// Esc closes the window. A zero-size button carrying .cancelAction is more
+/// reliable than onExitCommand, which needs the root view to be focusable.
+struct CloseOnEscape: ViewModifier {
+    @Environment(\.dismiss) private var dismiss
 
-    var body: some View {
-        TabView {
-            GeneralTab(model: model)
-                .tabItem { Label("General", systemImage: "slider.horizontal.3") }
-            ButtonsTab(model: model)
-                .tabItem { Label("Buttons", systemImage: "gamecontroller") }
+    func body(content: Content) -> some View {
+        content.background {
+            Button("") { dismiss() }
+                .keyboardShortcut(.cancelAction)
+                .buttonStyle(.plain)
+                .opacity(0)
+                .frame(width: 0, height: 0)
+                .accessibilityHidden(true)
         }
-        .frame(width: 680, height: 600)
-        .onAppear { bringToFront() }
     }
-
 }
 
-/// Accessory apps aren't activated when the Settings window opens, so it
+extension View {
+    func closesOnEscape() -> some View { modifier(CloseOnEscape()) }
+}
+
+/// Accessory apps aren't activated when a settings window opens, so it
 /// would otherwise appear (or stay) behind the frontmost app.
-func bringToFront() {
+/// SwiftUI assigns NSWindow identifiers derived from the scene id, so
+/// match by substring rather than equality.
+func bringToFront(id: String) {
     NSApp.activate(ignoringOtherApps: true)
     DispatchQueue.main.async {
-        NSApp.windows
-            .first { $0.identifier?.rawValue.contains("Settings") == true }?
-            .makeKeyAndOrderFront(nil)
+        guard let window = NSApp.windows
+            .first(where: { $0.identifier?.rawValue.contains(id) == true }) else { return }
+        window.center()
+        window.makeKeyAndOrderFront(nil)
     }
 }
 
@@ -35,54 +43,61 @@ struct GeneralTab: View {
     var body: some View {
         Form {
             Section("Startup") {
-                Toggle("Launch at login", isOn: $model.launchAtLogin)
-                Toggle("Enable on launch", isOn: $model.config.settings.enableOnLaunch)
+                SettingsRow(color: .green, symbol: "power", title: "Launch at login") {
+                    Toggle("", isOn: $model.launchAtLogin).labelsHidden()
+                }
+                SettingsRow(color: .orange, symbol: "bolt.fill", title: "Enable on launch") {
+                    Toggle("", isOn: $model.config.settings.enableOnLaunch).labelsHidden()
+                }
             }
             Section("Sensitivity") {
-                NumberSettingRow(
-                    title: "Cursor speed",
-                    caption: "400 – 3000 px/s · Recommended 1400",
-                    value: $model.config.settings.cursorSpeed,
-                    range: 400...3000,
-                    step: 100,
-                    format: .number.precision(.fractionLength(0)))
-                NumberSettingRow(
-                    title: "Scroll speed",
-                    caption: "5 – 80 lines/s · Recommended 30",
-                    value: $model.config.settings.scrollSpeed,
-                    range: 5...80,
-                    step: 5,
-                    format: .number.precision(.fractionLength(0)))
-                NumberSettingRow(
-                    title: "Dead zone",
-                    caption: "0% – 50% · Recommended 5%",
-                    value: $model.config.settings.deadZone,
-                    range: 0...0.5,
-                    step: 0.01,
-                    format: .percent.precision(.fractionLength(0)))
+                SettingsRow(color: .blue, symbol: "cursorarrow",
+                            title: "Cursor speed", subtitle: "400 – 3000 px/s · Recommended 1400") {
+                    SliderInputRow(value: $model.config.settings.cursorSpeed,
+                                   range: 400...3000, step: 100,
+                                   format: .number.precision(.fractionLength(0)))
+                }
+                SettingsRow(color: .indigo, symbol: "arrow.up.and.down",
+                            title: "Scroll speed", subtitle: "5 – 80 lines/s · Recommended 30") {
+                    SliderInputRow(value: $model.config.settings.scrollSpeed,
+                                   range: 5...80, step: 5,
+                                   format: .number.precision(.fractionLength(0)))
+                }
+                SettingsRow(color: .graphite, symbol: "target",
+                            title: "Dead zone", subtitle: "0 – 50% · Recommended 5%") {
+                    SliderInputRow(value: $model.config.settings.deadZone,
+                                   range: 0...0.5, step: 0.01,
+                                   format: .percent.precision(.fractionLength(0)))
+                }
             }
             Section("Sticks") {
-                Picker("Right stick", selection: $model.config.mapping.rightStick) {
-                    Text("Move mouse").tag(StickRole.mouseMove)
-                    Text("Scroll").tag(StickRole.scroll)
-                    Text("Off").tag(StickRole.none)
+                SettingsRow(color: .teal, symbol: "l.joystick",
+                            title: "Left stick", subtitle: roleSubtitle(model.config.mapping.leftStick)) {
+                    StickRolePicker(role: $model.config.mapping.leftStick)
                 }
-                Picker("Left stick", selection: $model.config.mapping.leftStick) {
-                    Text("Move mouse").tag(StickRole.mouseMove)
-                    Text("Scroll").tag(StickRole.scroll)
-                    Text("Off").tag(StickRole.none)
+                SettingsRow(color: .purple, symbol: "r.joystick",
+                            title: "Right stick", subtitle: roleSubtitle(model.config.mapping.rightStick)) {
+                    StickRolePicker(role: $model.config.mapping.rightStick)
+                }
+                SettingsRow(color: .pink, symbol: "arrow.up.arrow.down",
+                            title: "Invert scroll direction", subtitle: "Match trackpad \"natural\" scrolling") {
+                    Toggle("", isOn: $model.config.settings.invertScroll).labelsHidden()
                 }
             }
-            Section("Configuration") {
-                LabeledContent {
-                    HStack {
+            Section {
+                SettingsRow(color: .gray, symbol: "arrow.counterclockwise",
+                            title: "Backup", subtitle: "Export or import all settings") {
+                    HStack(spacing: 8) {
                         Button("Import") { importConfig() }
                         Button("Export") { exportConfig() }
                     }
-                } label: {
-                    Text("Backup")
-                    Text("Save the full configuration to a file, or restore one")
                 }
+            } header: {
+                Text("Configuration")
+            } footer: {
+                Text("Save the full configuration to a file, or restore a previous one.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
@@ -124,47 +139,25 @@ struct GeneralTab: View {
     }
 }
 
-struct NumberSettingRow<F: ParseableFormatStyle>: View
-where F.FormatInput == Double, F.FormatOutput == String {
-    let title: String
-    let caption: String
-    @Binding var value: Double
-    let range: ClosedRange<Double>
-    let step: Double
-    let format: F
-
-    @State private var text = ""
-    @FocusState private var focused: Bool
-
-    var body: some View {
-        LabeledContent {
-            HStack(spacing: 6) {
-                TextField("", text: $text)
-                    .labelsHidden()
-                    .textFieldStyle(.roundedBorder)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 80)
-                    .focused($focused)
-                    .onSubmit { commit() }
-                Stepper("", value: $value, in: range, step: step)
-                    .labelsHidden()
-            }
-        } label: {
-            Text(title)
-            Text(caption)
-        }
-        .onAppear { text = format.format(value) }
-        .onChange(of: value) { _, newValue in text = format.format(newValue) }
-        .onChange(of: focused) { _, isFocused in
-            if !isFocused { commit() }
-        }
-    }
-
-    /// Validation happens only on ⏎ or focus loss — never mid-typing.
-    private func commit() {
-        if let parsed = try? format.parseStrategy.parse(text) {
-            value = min(max(parsed, range.lowerBound), range.upperBound)
-        }
-        text = format.format(value)
+func roleSubtitle(_ role: StickRole) -> String {
+    switch role {
+    case .mouseMove: return "Drives the cursor"
+    case .scroll: return "Vertical & horizontal"
+    case .none: return "Off"
     }
 }
+
+struct StickRolePicker: View {
+    @Binding var role: StickRole
+
+    var body: some View {
+        Picker("", selection: $role) {
+            Text("Move mouse").tag(StickRole.mouseMove)
+            Text("Scroll").tag(StickRole.scroll)
+            Text("Off").tag(StickRole.none)
+        }
+        .labelsHidden()
+        .fixedSize()
+    }
+}
+

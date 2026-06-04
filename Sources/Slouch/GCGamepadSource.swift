@@ -7,6 +7,8 @@ final class GCGamepadSource: GamepadSource {
 
     var isConnected: Bool { controller?.extendedGamepad != nil }
 
+    var controllerName: String? { controller?.vendorName }
+
     init() {
         // LSUIElement apps are never frontmost; without this the framework drops all input.
         GCController.shouldMonitorBackgroundEvents = true

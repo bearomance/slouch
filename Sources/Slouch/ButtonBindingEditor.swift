@@ -37,16 +37,23 @@ private func category(of action: OutputAction?) -> ActionCategory {
 
 struct ButtonsTab: View {
     @ObservedObject var model: AppModel
-    private let buttons: [ButtonID] = [
-        .a, .b, .x, .y, .lb, .rb, .lt, .rt, .menu, .options,
-        .dpadUp, .dpadDown, .dpadLeft, .dpadRight,
+    private let groups: [(title: String, buttons: [ButtonID])] = [
+        ("Face buttons", [.a, .b, .x, .y]),
+        ("Shoulders & triggers", [.lb, .rb, .lt, .rt]),
+        ("System", [.menu, .options]),
+        ("D-pad", [.dpadUp, .dpadDown, .dpadLeft, .dpadRight]),
     ]
 
     var body: some View {
         Form {
-            Section("Buttons") {
-                ForEach(buttons, id: \.self) { button in
-                    ButtonBindingRow(button: button, action: binding(for: button))
+            Section {
+                ControllerHeaderCard(model: model)
+            }
+            ForEach(groups, id: \.title) { group in
+                Section(group.title) {
+                    ForEach(group.buttons, id: \.self) { button in
+                        ButtonBindingRow(button: button, action: binding(for: button))
+                    }
                 }
             }
         }
@@ -55,10 +62,6 @@ struct ButtonsTab: View {
         // Clicking empty form area doesn't resign first responder on macOS;
         // do it by hand so text fields lose their focus ring.
         .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
-        // AppKit auto-focuses the first text field when the tab appears.
-        .onAppear {
-            DispatchQueue.main.async { NSApp.keyWindow?.makeFirstResponder(nil) }
-        }
     }
 
     private func binding(for button: ButtonID) -> Binding<OutputAction?> {
@@ -69,28 +72,122 @@ struct ButtonsTab: View {
     }
 }
 
+struct ControllerHeaderCard: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        HStack(spacing: 18) {
+            ControllerArt()
+                .frame(width: 168)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(model.controllerName ?? "Game Controller")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("Assign each button to a mouse action, keyboard shortcut, or system function below.")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(model.isConnected ? Color.green : Color.yellow)
+                        .frame(width: 7, height: 7)
+                    Text(statusText)
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 6)
+            }
+        }
+        .padding(.vertical, 6)
+    }
+
+    private var statusText: String {
+        guard model.isConnected else {
+            return model.isReconnecting ? "Reconnecting" : "Not connected"
+        }
+        let mapped = model.config.mapping.buttons.values.filter { $0 != OutputAction.none }.count
+        return "Connected · \(mapped) buttons mapped"
+    }
+}
+
+struct ButtonBadge: View {
+    let button: ButtonID
+    @Environment(\.colorScheme) private var colorScheme
+
+    private static let faceColors: [ButtonID: Color] = [
+        .a: Color(red: 0.33, green: 0.69, blue: 0.23),
+        .b: Color(red: 0.88, green: 0.27, blue: 0.23),
+        .x: Color(red: 0.17, green: 0.49, blue: 0.94),
+        .y: Color(red: 0.89, green: 0.64, blue: 0.14),
+    ]
+
+    var body: some View {
+        if let color = Self.faceColors[button] {
+            Circle()
+                .fill(color)
+                .frame(width: 26, height: 26)
+                .overlay {
+                    Text(button.rawValue.uppercased())
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+        } else {
+            Text(badgeText)
+                .font(.system(size: 12.5, weight: .semibold))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 7)
+                .frame(height: 26)
+                .frame(minWidth: 26)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.14) : Color(red: 0.94, green: 0.94, blue: 0.95))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5)
+                )
+        }
+    }
+
+    private var badgeText: String {
+        switch button {
+        case .dpadUp: return "↑"
+        case .dpadDown: return "↓"
+        case .dpadLeft: return "←"
+        case .dpadRight: return "→"
+        default: return button.rawValue.uppercased()
+        }
+    }
+}
+
 struct ButtonBindingRow: View {
     let button: ButtonID
     @Binding var action: OutputAction?
+    @State private var editingURL = false
 
     var body: some View {
-        HStack(spacing: 8) {
-            Text(label(button))
-                .frame(width: 80, alignment: .leading)
+        HStack(spacing: 9) {
+            HStack(spacing: 11) {
+                ButtonBadge(button: button)
+                Text(label(button))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             Picker("", selection: categoryBinding) {
                 ForEach(ActionCategory.allCases) { Text($0.rawValue).tag($0) }
             }
             .labelsHidden()
-            .fixedSize()
-            .frame(width: 120, alignment: .leading)
+            .frame(width: 104)
 
-            detail
-                .frame(width: 300, alignment: .leading)
-            Spacer(minLength: 0)
+            valueCell
+                .frame(width: 158, alignment: .leading)
+
+            trailingCell
+                .frame(width: 72, alignment: .leading)
         }
+        .padding(.vertical, 2)
     }
 
-    @ViewBuilder private var detail: some View {
+    @ViewBuilder private var valueCell: some View {
         switch category(of: action) {
         case .off:
             Color.clear.frame(height: 1)
@@ -101,27 +198,33 @@ struct ButtonBindingRow: View {
                 Text("Middle click").tag(MouseButton.middle)
             }
             .labelsHidden()
-            .fixedSize()
-            .frame(width: 160, alignment: .leading)
         case .keyboard:
-            HStack(spacing: 6) {
-                KeyComboField(stroke: keystrokeBinding)
-                    .frame(width: 170)
-                KeyRecorderButton(stroke: keystrokeBinding)
-            }
+            KeyComboField(stroke: keystrokeBinding)
         case .function:
-            HStack(spacing: 6) {
-                Picker("", selection: functionBinding) {
-                    ForEach(FunctionKind.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .labelsHidden()
-                .fixedSize()
-                .frame(width: 150, alignment: .leading)
-                if case .openURL? = action {
-                    URLField(urlString: urlBinding)
-                        .frame(width: 144)
-                }
+            Picker("", selection: functionBinding) {
+                ForEach(FunctionKind.allCases) { Text($0.rawValue).tag($0) }
             }
+            .labelsHidden()
+        }
+    }
+
+    @ViewBuilder private var trailingCell: some View {
+        switch category(of: action) {
+        case .keyboard:
+            KeyRecorderButton(stroke: keystrokeBinding)
+        case .function:
+            if case .openURL? = action {
+                Button("Edit") { editingURL = true }
+                    .popover(isPresented: $editingURL, arrowEdge: .bottom) {
+                        URLField(urlString: urlBinding)
+                            .frame(width: 260)
+                            .padding(12)
+                    }
+            } else {
+                Color.clear.frame(height: 1)
+            }
+        default:
+            Color.clear.frame(height: 1)
         }
     }
 
@@ -197,19 +300,11 @@ struct ButtonBindingRow: View {
 struct KeyComboField: View {
     @Binding var stroke: KeyStroke
     @State private var text = ""
-    @FocusState private var focused: Bool
 
     var body: some View {
-        TextField("", text: $text, prompt: Text("cmd+shift+space"))
-            .labelsHidden()
-            .textFieldStyle(.roundedBorder)
-            .focused($focused)
+        ClickToEditTextField(text: $text, placeholder: "cmd+shift+space", onEndEditing: commit)
             .onAppear { text = stroke.displayString }
             .onChange(of: stroke) { _, newStroke in text = newStroke.displayString }
-            .onSubmit { commit() }
-            .onChange(of: focused) { _, isFocused in
-                if !isFocused { commit() }
-            }
     }
 
     private func commit() {
@@ -225,7 +320,7 @@ struct URLField: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        TextField("", text: $text, prompt: Text("https://…"))
+        TextField("", text: $text, prompt: Text("https://"))
             .labelsHidden()
             .textFieldStyle(.roundedBorder)
             .focused($focused)
@@ -248,7 +343,7 @@ struct KeyRecorderButton: View {
     @State private var monitor: Any?
 
     var body: some View {
-        Button(recording ? "Press key…" : "Record") {
+        Button(recording ? "Press key" : "Record") {
             recording ? cancel() : start()
         }
         .onDisappear { cancel() }
