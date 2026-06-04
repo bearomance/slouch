@@ -4,10 +4,11 @@ import XCTest
 final class MappingModelTests: XCTestCase {
     func test_couchDefault_hasExpectedBindings() {
         let m = Mapping.couchDefault
-        XCTAssertEqual(m.rightStick, .mouseMove)
-        XCTAssertEqual(m.leftStick, .scroll)
-        XCTAssertEqual(m.buttons[.a], .mouseClick(.left))
-        XCTAssertEqual(m.buttons[.b], .mouseClick(.right))
+        XCTAssertEqual(m.leftStick, .mouseMove)
+        XCTAssertEqual(m.rightStick, .scroll)
+        XCTAssertEqual(m.buttons[.a], .mouseClick(.right))
+        XCTAssertEqual(m.buttons[.b], .mouseClick(.left))
+        XCTAssertEqual(m.buttons[.options], .openURL("https://www.bilibili.com"))
         XCTAssertEqual(m.buttons[.menu], .sleep)
     }
 

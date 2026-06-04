@@ -8,20 +8,20 @@ final class MappingEngineTests: XCTestCase {
 
     func test_buttonPress_emitsMouseDownOnce() {
         let engine = makeEngine()
-        let cmds = engine.process(state: GamepadState(pressed: [.a]), dt: 1.0 / 60)
+        let cmds = engine.process(state: GamepadState(pressed: [.b]), dt: 1.0 / 60)
         XCTAssertTrue(cmds.contains(.mouseDown(.left)))
     }
 
     func test_buttonHeld_doesNotRepeatMouseDown() {
         let engine = makeEngine()
-        _ = engine.process(state: GamepadState(pressed: [.a]), dt: 1.0 / 60)
-        let cmds = engine.process(state: GamepadState(pressed: [.a]), dt: 1.0 / 60)
+        _ = engine.process(state: GamepadState(pressed: [.b]), dt: 1.0 / 60)
+        let cmds = engine.process(state: GamepadState(pressed: [.b]), dt: 1.0 / 60)
         XCTAssertFalse(cmds.contains(.mouseDown(.left)))
     }
 
     func test_buttonRelease_emitsMouseUp() {
         let engine = makeEngine()
-        _ = engine.process(state: GamepadState(pressed: [.a]), dt: 1.0 / 60)
+        _ = engine.process(state: GamepadState(pressed: [.b]), dt: 1.0 / 60)
         let cmds = engine.process(state: GamepadState(pressed: []), dt: 1.0 / 60)
         XCTAssertTrue(cmds.contains(.mouseUp(.left)))
     }
@@ -30,7 +30,7 @@ final class MappingEngineTests: XCTestCase {
         let engine = makeEngine()
         let down = engine.process(state: GamepadState(pressed: [.y]), dt: 1.0 / 60)
         let up = engine.process(state: GamepadState(pressed: []), dt: 1.0 / 60)
-        let stroke = KeyStroke(keyCode: 49, modifiers: [.command, .shift])
+        let stroke = KeyStroke(keyCode: 13, modifiers: [.command])
         XCTAssertTrue(down.contains(.keyDown(stroke)))
         XCTAssertTrue(up.contains(.keyUp(stroke)))
     }
@@ -69,36 +69,36 @@ final class MappingEngineTests: XCTestCase {
         XCTAssertTrue(up.contains(.sleep))
     }
 
-    func test_rightStickFullRight_movesCursorRight() {
+    func test_leftStickFullRight_movesCursorRight() {
         let engine = makeEngine()
         let dt = 0.5
-        let cmds = engine.process(state: GamepadState(rightStick: StickVector(x: 1, y: 0)), dt: dt)
-        // speed at full = cursorSpeed (1400) * curvedSpeed(1)=1 * dt(0.5) = 700
+        let cmds = engine.process(state: GamepadState(leftStick: StickVector(x: 1, y: 0)), dt: dt)
+        // speed at full = cursorSpeed (1500) * curvedSpeed(1)=1 * dt(0.5) = 750
         guard case let .moveMouse(dx, dy)? = cmds.first(where: { if case .moveMouse = $0 { return true }; return false }) else {
             return XCTFail("expected moveMouse")
         }
-        XCTAssertEqual(dx, 700, accuracy: 1e-6)
+        XCTAssertEqual(dx, 750, accuracy: 1e-6)
         XCTAssertEqual(dy, 0, accuracy: 1e-6)
     }
 
-    func test_rightStickUp_movesCursorUp_negativeDy() {
+    func test_leftStickUp_movesCursorUp_negativeDy() {
         let engine = makeEngine()
-        let cmds = engine.process(state: GamepadState(rightStick: StickVector(x: 0, y: 1)), dt: 0.5)
+        let cmds = engine.process(state: GamepadState(leftStick: StickVector(x: 0, y: 1)), dt: 0.5)
         guard case let .moveMouse(_, dy)? = cmds.first(where: { if case .moveMouse = $0 { return true }; return false }) else {
             return XCTFail("expected moveMouse")
         }
         XCTAssertLessThan(dy, 0)
     }
 
-    func test_rightStickInsideDeadzone_emitsNoMove() {
+    func test_leftStickInsideDeadzone_emitsNoMove() {
         let engine = makeEngine()
-        let cmds = engine.process(state: GamepadState(rightStick: StickVector(x: 0.02, y: 0)), dt: 0.5)
+        let cmds = engine.process(state: GamepadState(leftStick: StickVector(x: 0.02, y: 0)), dt: 0.5)
         XCTAssertFalse(cmds.contains { if case .moveMouse = $0 { return true }; return false })
     }
 
-    func test_leftStickDown_scrolls() {
+    func test_rightStickDown_scrolls() {
         let engine = makeEngine()
-        let cmds = engine.process(state: GamepadState(leftStick: StickVector(x: 0, y: -1)), dt: 0.5)
+        let cmds = engine.process(state: GamepadState(rightStick: StickVector(x: 0, y: -1)), dt: 0.5)
         XCTAssertTrue(cmds.contains { if case .scroll = $0 { return true }; return false })
     }
 
@@ -114,7 +114,7 @@ final class MappingEngineTests: XCTestCase {
         settings.invertScroll = true
         let engine = MappingEngine(mapping: .couchDefault, settings: settings)
         let normal = makeEngine()
-        let state = GamepadState(leftStick: StickVector(x: 0, y: 1))
+        let state = GamepadState(rightStick: StickVector(x: 0, y: 1))
         guard let inverted = scrollCommand(engine.process(state: state, dt: 0.5)),
               let baseline = scrollCommand(normal.process(state: state, dt: 0.5)) else {
             return XCTFail("expected scroll")
@@ -128,7 +128,7 @@ final class MappingEngineTests: XCTestCase {
         settings.invertScroll = true
         let engine = MappingEngine(mapping: .couchDefault, settings: settings)
         let normal = makeEngine()
-        let state = GamepadState(leftStick: StickVector(x: 1, y: 0))
+        let state = GamepadState(rightStick: StickVector(x: 1, y: 0))
         guard let inverted = scrollCommand(engine.process(state: state, dt: 0.5)),
               let baseline = scrollCommand(normal.process(state: state, dt: 0.5)) else {
             return XCTFail("expected scroll")

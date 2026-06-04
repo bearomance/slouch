@@ -13,14 +13,17 @@ public struct Mapping: Codable, Equatable, Sendable {
 
     public static var couchDefault: Mapping {
         Mapping(
-            leftStick: .scroll,
-            rightStick: .mouseMove,
+            leftStick: .mouseMove,
+            rightStick: .scroll,
             buttons: [
-                .a: .mouseClick(.left),
-                .b: .mouseClick(.right),
-                // Y triggers the user's voice-input app; default Cmd+Shift+Space.
-                .y: .keystroke(KeyStroke(keyCode: 49, modifiers: [.command, .shift])),
+                .a: .mouseClick(.right),
+                .b: .mouseClick(.left),
+                .x: .keystroke(KeyStroke(keyCode: 17, modifiers: [.command])),   // ⌘T
+                .y: .keystroke(KeyStroke(keyCode: 13, modifiers: [.command])),   // ⌘W
+                .lt: .keystroke(KeyStroke(keyCode: 15, modifiers: [.command, .shift])),  // ⌘⇧R
+                .rt: .keystroke(KeyStroke(keyCode: 36)),                         // Return
                 .menu: .sleep,
+                .options: .openURL("https://www.bilibili.com"),
                 .dpadUp: .keystroke(KeyStroke(keyCode: 126)),
                 .dpadDown: .keystroke(KeyStroke(keyCode: 125)),
                 .dpadLeft: .keystroke(KeyStroke(keyCode: 123)),
@@ -37,7 +40,7 @@ public struct Settings: Codable, Equatable, Sendable {
     public var enableOnLaunch: Bool
     public var invertScroll: Bool
 
-    public init(cursorSpeed: Double = 1400, scrollSpeed: Double = 30, deadZone: Double = 0.05,
+    public init(cursorSpeed: Double = 1500, scrollSpeed: Double = 50, deadZone: Double = 0.05,
                 enableOnLaunch: Bool = true, invertScroll: Bool = false) {
         self.cursorSpeed = cursorSpeed
         self.scrollSpeed = scrollSpeed
