@@ -27,6 +27,15 @@ final class KeyStrokeParseTests: XCTestCase {
         XCTAssertEqual(KeyStroke.parse("up"), KeyStroke(keyCode: 126))
     }
 
+    func test_parsesStandaloneSideSpecificOption() {
+        XCTAssertEqual(KeyStroke.parse("ropt"), KeyStroke(keyCode: 61))
+        XCTAssertEqual(KeyStroke.parse("ralt"), KeyStroke(keyCode: 61))
+        XCTAssertEqual(KeyStroke.parse("rightoption"), KeyStroke(keyCode: 61))
+        XCTAssertEqual(KeyStroke.parse("lopt"), KeyStroke(keyCode: 58))
+        XCTAssertEqual(KeyStroke.parse("lalt"), KeyStroke(keyCode: 58))
+        XCTAssertEqual(KeyStroke.parse("leftoption"), KeyStroke(keyCode: 58))
+    }
+
     func test_parsesLetterCaseInsensitive() {
         XCTAssertEqual(KeyStroke.parse("a"), KeyStroke(keyCode: 0))
         XCTAssertEqual(KeyStroke.parse("A"), KeyStroke(keyCode: 0))

@@ -14,4 +14,9 @@ final class KeyStrokeDisplayTests: XCTestCase {
     func test_unknownKey_fallsBackToCode() {
         XCTAssertEqual(KeyStroke(keyCode: 200).displayString, "key 200")
     }
+
+    func test_sideSpecificOption_rendersCompactName() {
+        XCTAssertEqual(KeyStroke(keyCode: 61).displayString, "R⌥")
+        XCTAssertEqual(KeyStroke(keyCode: 58).displayString, "L⌥")
+    }
 }

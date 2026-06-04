@@ -67,6 +67,8 @@ public extension KeyStroke {
         43: ",", 44: "/", 47: ".", 50: "`",
         122: "F1", 120: "F2", 99: "F3", 118: "F4", 96: "F5", 97: "F6",
         98: "F7", 100: "F8", 101: "F9", 109: "F10", 103: "F11", 111: "F12",
+        // Side-specific modifiers, bindable standalone (e.g. hold-to-talk).
+        58: "L⌥", 61: "R⌥",
     ]
 
     /// Parses a typed key combo like "F6", "cmd+shift+space", or "⇧⌘Space".
@@ -109,6 +111,8 @@ public extension KeyStroke {
             "space": 49, "esc": 53, "escape": 53, "enter": 36, "return": 36,
             "tab": 48, "delete": 51, "backspace": 51,
             "up": 126, "down": 125, "left": 123, "right": 124,
+            "lopt": 58, "lalt": 58, "leftoption": 58,
+            "ropt": 61, "ralt": 61, "rightoption": 61,
         ]
         map.merge(aliases) { current, _ in current }
         return map

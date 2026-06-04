@@ -89,9 +89,24 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         (.control, 59), (.option, 58), (.shift, 56), (.command, 55),
     ]
 
+    // Standalone modifier keys (bindable as the main key, e.g. hold-to-talk
+    // on right Option). The NX_DEVICE…KEYMASK bit is what lets apps tell
+    // left from right.
+    private static let standaloneModifierFlags: [UInt16: CGEventFlags] = [
+        58: CGEventFlags(rawValue: CGEventFlags.maskAlternate.rawValue | 0x20), // left ⌥
+        61: CGEventFlags(rawValue: CGEventFlags.maskAlternate.rawValue | 0x40), // right ⌥
+    ]
+
     private func key(_ stroke: KeyStroke, down: Bool) {
         let source = CGEventSource(stateID: .hidSystemState)
         let flags = cgFlags(stroke.modifiers)
+        if let modifierFlags = Self.standaloneModifierFlags[stroke.keyCode] {
+            let e = CGEvent(keyboardEventSource: source, virtualKey: stroke.keyCode, keyDown: down)
+            e?.type = .flagsChanged
+            e?.flags = down ? flags.union(modifierFlags) : flags
+            e?.post(tap: .cghidEventTap)
+            return
+        }
         if down {
             var accumulated: CGEventFlags = []
             for (mod, code) in Self.modifierKeyCodes where stroke.modifiers.contains(mod) {
