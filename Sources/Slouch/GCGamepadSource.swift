@@ -18,9 +18,12 @@ final class GCGamepadSource: GamepadSource {
             self?.bind()
         }
         NotificationCenter.default.addObserver(
-            forName: .GCControllerDidDisconnect, object: nil, queue: .main) { [weak self] _ in
-            self?.controller = nil
-            self?.onConnectionChange?(false)
+            forName: .GCControllerDidDisconnect, object: nil, queue: .main) { [weak self] note in
+            guard let self else { return }
+            // BT reconnect can replay a stale disconnect after the new connect;
+            // ignore it unless it's for the controller we're actually using.
+            if let gone = note.object as? GCController, gone !== self.controller { return }
+            self.bind()
         }
     }
 
