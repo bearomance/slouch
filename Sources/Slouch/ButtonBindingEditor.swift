@@ -23,6 +23,7 @@ private enum FunctionKind: String, CaseIterable, Identifiable {
     case sleep = "Sleep"
     case openURL = "Open URL"
     case keyboardViewer = "Keyboard Viewer"
+    case precision = "Precision Cursor"
     var id: String { rawValue }
 }
 
@@ -30,7 +31,7 @@ private func category(of action: OutputAction?) -> ActionCategory {
     switch action {
     case .mouseClick: return .mouse
     case .keystroke: return .keyboard
-    case .openURL, .sleep, .keyboardViewer: return .function
+    case .openURL, .sleep, .keyboardViewer, .precision: return .function
     case .some(.none), nil: return .off
     }
 }
@@ -224,6 +225,7 @@ struct ButtonBindingRow: View {
                 switch action {
                 case .openURL?: return .openURL
                 case .keyboardViewer?: return .keyboardViewer
+                case .precision?: return .precision
                 default: return .sleep
                 }
             },
@@ -231,6 +233,7 @@ struct ButtonBindingRow: View {
                 switch kind {
                 case .sleep: action = .sleep
                 case .keyboardViewer: action = .keyboardViewer
+                case .precision: action = .precision
                 case .openURL:
                     if case .openURL? = action {} else { action = .openURL("https://www.bilibili.com") }
                 }

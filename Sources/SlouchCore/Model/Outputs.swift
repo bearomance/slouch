@@ -46,6 +46,7 @@ public enum OutputAction: Codable, Equatable, Sendable {
     case openURL(String)
     case sleep
     case keyboardViewer
+    case precision // hold to slow the cursor for small targets
     case none
 }
 

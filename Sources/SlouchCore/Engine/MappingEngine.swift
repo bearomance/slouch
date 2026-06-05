@@ -5,9 +5,11 @@ public final class MappingEngine {
     public var settings: Settings
     private var previouslyPressed: Set<ButtonID> = []
     private var repeatClocks: [ButtonID: (held: Double, nextFire: Double)] = [:]
+    private var precisionHeld = false
 
     public static let repeatInitialDelay = 0.4
     public static let repeatInterval = 0.08
+    public static let precisionFactor = 0.3
 
     public init(mapping: Mapping, settings: Settings) {
         self.mapping = mapping
@@ -15,6 +17,7 @@ public final class MappingEngine {
     }
 
     public func process(state: GamepadState, dt: Double) -> [SynthCommand] {
+        precisionHeld = state.pressed.contains { mapping.buttons[$0] == .precision }
         var commands: [SynthCommand] = []
         commands.append(contentsOf: stickCommands(state: state, dt: dt))
         commands.append(contentsOf: buttonCommands(state: state))
@@ -63,7 +66,8 @@ public final class MappingEngine {
         let speed = curvedSpeed(magnitude: mag)
         switch role {
         case .mouseMove:
-            let s = speed * settings.cursorSpeed * dt
+            let factor = precisionHeld ? Self.precisionFactor : 1
+            let s = speed * settings.cursorSpeed * dt * factor
             return [.moveMouse(dx: unitX * s, dy: -unitY * s)]
         case .scroll:
             let s = speed * settings.scrollSpeed * dt
@@ -85,7 +89,7 @@ public final class MappingEngine {
             case .keystroke(let k): commands.append(.keyDown(k))
             case .openURL(let url): commands.append(.openURL(url))
             case .keyboardViewer: commands.append(.keyboardViewer)
-            case .sleep, OutputAction.none?, nil: break
+            case .sleep, .precision, OutputAction.none?, nil: break
             }
         }
         for button in justReleased {
@@ -95,7 +99,7 @@ public final class MappingEngine {
             // Sleep fires on release: triggering on press lets the release
             // HID report wake the Mac right back up.
             case .sleep: commands.append(.sleep)
-            case .openURL, .keyboardViewer, OutputAction.none?, nil: break
+            case .openURL, .keyboardViewer, .precision, OutputAction.none?, nil: break
             }
         }
         return commands
