@@ -74,7 +74,8 @@ final class AppModel: ObservableObject {
 
         updateBattery()
         batteryTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.updateBattery() }
+            guard let self else { return }
+            Task { @MainActor in self.updateBattery() }
         }
     }
 
