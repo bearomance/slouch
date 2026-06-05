@@ -46,9 +46,6 @@ struct ButtonsTab: View {
 
     var body: some View {
         Form {
-            Section {
-                ControllerHeaderCard(model: model)
-            }
             ForEach(groups, id: \.title) { group in
                 Section(group.title) {
                     ForEach(group.buttons, id: \.self) { button in
@@ -69,43 +66,6 @@ struct ButtonsTab: View {
             get: { model.config.mapping.buttons[button] },
             set: { model.config.mapping.buttons[button] = $0 }
         )
-    }
-}
-
-struct ControllerHeaderCard: View {
-    @ObservedObject var model: AppModel
-
-    var body: some View {
-        HStack(spacing: 18) {
-            ControllerArt()
-                .frame(width: 168)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(model.controllerName ?? "Game Controller")
-                    .font(.system(size: 13, weight: .semibold))
-                Text("Assign each button to a mouse action, keyboard shortcut, or system function below.")
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(model.isConnected ? Color.green : Color.yellow)
-                        .frame(width: 7, height: 7)
-                    Text(statusText)
-                        .font(.system(size: 11.5))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.top, 6)
-            }
-        }
-        .padding(.vertical, 6)
-    }
-
-    private var statusText: String {
-        guard model.isConnected else {
-            return model.isReconnecting ? "Reconnecting" : "Not connected"
-        }
-        let mapped = model.config.mapping.buttons.values.filter { $0 != OutputAction.none }.count
-        return "Connected · \(mapped) buttons mapped"
     }
 }
 
