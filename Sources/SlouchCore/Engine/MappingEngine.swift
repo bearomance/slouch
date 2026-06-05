@@ -4,6 +4,10 @@ public final class MappingEngine {
     public var mapping: Mapping
     public var settings: Settings
     private var previouslyPressed: Set<ButtonID> = []
+    private var repeatClocks: [ButtonID: (held: Double, nextFire: Double)] = [:]
+
+    public static let repeatInitialDelay = 0.4
+    public static let repeatInterval = 0.08
 
     public init(mapping: Mapping, settings: Settings) {
         self.mapping = mapping
@@ -14,7 +18,32 @@ public final class MappingEngine {
         var commands: [SynthCommand] = []
         commands.append(contentsOf: stickCommands(state: state, dt: dt))
         commands.append(contentsOf: buttonCommands(state: state))
+        commands.append(contentsOf: repeatCommands(state: state, dt: dt))
         previouslyPressed = state.pressed
+        return commands
+    }
+
+    /// Synthesized keys get no system auto-repeat (that lives in the keyboard
+    /// driver), so held keystroke buttons re-fire here. Bare modifiers don't
+    /// repeat — real keyboards don't repeat them either.
+    private func repeatCommands(state: GamepadState, dt: Double) -> [SynthCommand] {
+        var commands: [SynthCommand] = []
+        for button in state.pressed {
+            guard case .keystroke(let stroke)? = mapping.buttons[button],
+                  !KeyStroke.modifierKeyCodes.contains(stroke.keyCode) else { continue }
+            guard previouslyPressed.contains(button) else {
+                repeatClocks[button] = (held: 0, nextFire: Self.repeatInitialDelay)
+                continue
+            }
+            guard var clock = repeatClocks[button] else { continue }
+            clock.held += dt
+            if clock.held >= clock.nextFire {
+                commands.append(.keyRepeat(stroke))
+                clock.nextFire = clock.held + Self.repeatInterval
+            }
+            repeatClocks[button] = clock
+        }
+        repeatClocks = repeatClocks.filter { state.pressed.contains($0.key) }
         return commands
     }
 

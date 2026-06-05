@@ -16,6 +16,7 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         case let .mouseUp(button): mouseButton(button, down: false)
         case let .keyDown(stroke): key(stroke, down: true)
         case let .keyUp(stroke): key(stroke, down: false)
+        case let .keyRepeat(stroke): keyRepeat(stroke)
         case .openURL, .sleep, .keyboardViewer: break // handled by SystemActions, not the synthesizer
         }
     }
@@ -112,6 +113,18 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         59: CGEventFlags(rawValue: CGEventFlags.maskControl.rawValue | 0x01),   // left ⌃
         62: CGEventFlags(rawValue: CGEventFlags.maskControl.rawValue | 0x2000), // right ⌃
     ]
+
+    // Modifiers are already held from the initial keyDown; only the main key
+    // re-fires, marked as an autorepeat like the keyboard driver would.
+    private func keyRepeat(_ stroke: KeyStroke) {
+        let source = CGEventSource(stateID: .hidSystemState)
+        var flags = cgFlags(stroke.modifiers)
+        if stroke.needsFnFlag { flags.insert(.maskSecondaryFn) }
+        let event = CGEvent(keyboardEventSource: source, virtualKey: stroke.keyCode, keyDown: true)
+        event?.flags = flags
+        event?.setIntegerValueField(.keyboardEventAutorepeat, value: 1)
+        event?.post(tap: .cghidEventTap)
+    }
 
     private func key(_ stroke: KeyStroke, down: Bool) {
         let source = CGEventSource(stateID: .hidSystemState)

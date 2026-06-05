@@ -10,15 +10,13 @@ public struct ModifierOnlyRecorder: Sendable {
         case abandoned
     }
 
-    public static let modifierKeyCodes: Set<UInt16> = [54, 55, 56, 58, 59, 60, 61, 62]
-
     private var held: Set<UInt16> = []
     private var pressed: Set<UInt16> = []
 
     public init() {}
 
     public mutating func flagsChanged(keyCode: UInt16) -> Outcome {
-        guard Self.modifierKeyCodes.contains(keyCode) else { return .recording }
+        guard KeyStroke.modifierKeyCodes.contains(keyCode) else { return .recording }
         if held.remove(keyCode) == nil {
             held.insert(keyCode)
             pressed.insert(keyCode)

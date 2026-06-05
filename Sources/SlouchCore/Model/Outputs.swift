@@ -25,6 +25,9 @@ public struct KeyStroke: Codable, Equatable, Sendable {
     // flag; system symbolic hotkeys like ⌥⌘F5 only match when it's present.
     public var needsFnFlag: Bool { Self.fnFlaggedKeyCodes.contains(keyCode) }
 
+    /// The eight side-specific modifier keys, bindable standalone.
+    public static let modifierKeyCodes: Set<UInt16> = [54, 55, 56, 58, 59, 60, 61, 62]
+
     private static let fnFlaggedKeyCodes: Set<UInt16> = [
         122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111, // F1–F12
         105, 107, 113, 106, 64, 79, 80, 90,                     // F13–F20
@@ -149,6 +152,7 @@ public enum SynthCommand: Equatable, Sendable {
     case mouseUp(MouseButton)
     case keyDown(KeyStroke)
     case keyUp(KeyStroke)
+    case keyRepeat(KeyStroke)
     case openURL(String)
     case sleep
     case keyboardViewer
