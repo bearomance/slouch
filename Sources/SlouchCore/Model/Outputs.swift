@@ -63,6 +63,11 @@ public extension KeyStroke {
         modifiers.symbolString + KeyStroke.keyName(for: keyCode)
     }
 
+    /// One element per key, for keycap-style rendering: ["⇧", "⌘", "T"].
+    var displayParts: [String] {
+        modifiers.symbolString.map(String.init) + [KeyStroke.keyName(for: keyCode)]
+    }
+
     static func keyName(for code: UInt16) -> String {
         knownKeyNames[code] ?? "key \(code)"
     }
@@ -80,6 +85,9 @@ public extension KeyStroke {
         98: "F7", 100: "F8", 101: "F9", 109: "F10", 103: "F11", 111: "F12",
         // Side-specific modifiers, bindable standalone (e.g. hold-to-talk).
         58: "L⌥", 61: "R⌥",
+        55: "L⌘", 54: "R⌘",
+        56: "L⇧", 60: "R⇧",
+        59: "L⌃", 62: "R⌃",
     ]
 
     /// Parses a typed key combo like "F6", "cmd+shift+space", or "⇧⌘Space".
@@ -124,6 +132,9 @@ public extension KeyStroke {
             "up": 126, "down": 125, "left": 123, "right": 124,
             "lopt": 58, "lalt": 58, "leftoption": 58,
             "ropt": 61, "ralt": 61, "rightoption": 61,
+            "lcmd": 55, "leftcommand": 55, "rcmd": 54, "rightcommand": 54,
+            "lshift": 56, "leftshift": 56, "rshift": 60, "rightshift": 60,
+            "lctrl": 59, "leftcontrol": 59, "rctrl": 62, "rightcontrol": 62,
         ]
         map.merge(aliases) { current, _ in current }
         return map

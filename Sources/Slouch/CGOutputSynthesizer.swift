@@ -105,6 +105,12 @@ final class CGOutputSynthesizer: OutputSynthesizer {
     private static let standaloneModifierFlags: [UInt16: CGEventFlags] = [
         58: CGEventFlags(rawValue: CGEventFlags.maskAlternate.rawValue | 0x20), // left ⌥
         61: CGEventFlags(rawValue: CGEventFlags.maskAlternate.rawValue | 0x40), // right ⌥
+        55: CGEventFlags(rawValue: CGEventFlags.maskCommand.rawValue | 0x08),   // left ⌘
+        54: CGEventFlags(rawValue: CGEventFlags.maskCommand.rawValue | 0x10),   // right ⌘
+        56: CGEventFlags(rawValue: CGEventFlags.maskShift.rawValue | 0x02),     // left ⇧
+        60: CGEventFlags(rawValue: CGEventFlags.maskShift.rawValue | 0x04),     // right ⇧
+        59: CGEventFlags(rawValue: CGEventFlags.maskControl.rawValue | 0x01),   // left ⌃
+        62: CGEventFlags(rawValue: CGEventFlags.maskControl.rawValue | 0x2000), // right ⌃
     ]
 
     private func key(_ stroke: KeyStroke, down: Bool) {

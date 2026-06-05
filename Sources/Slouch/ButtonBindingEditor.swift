@@ -295,21 +295,63 @@ struct ButtonBindingRow: View {
     }
 }
 
-/// Manual key-combo entry: type e.g. "cmd+shift+space" or "F6" and press ⏎.
-/// Invalid input reverts to the current binding.
+/// Shows the binding as keycap chips; click to type a combo like
+/// "cmd+shift+space" or "F6" and press ⏎. Invalid input reverts.
 struct KeyComboField: View {
     @Binding var stroke: KeyStroke
     @State private var text = ""
+    @State private var editing = false
+    @FocusState private var focused: Bool
 
     var body: some View {
-        ClickToEditTextField(text: $text, placeholder: "cmd+shift+space", onEndEditing: commit)
-            .onAppear { text = stroke.displayString }
-            .onChange(of: stroke) { _, newStroke in text = newStroke.displayString }
+        if editing {
+            TextField("", text: $text, prompt: Text("cmd+shift+space"))
+                .labelsHidden()
+                .textFieldStyle(.roundedBorder)
+                .focused($focused)
+                .onAppear {
+                    text = stroke.displayString
+                    focused = true
+                }
+                .onSubmit { commit() }
+                .onChange(of: focused) { _, isFocused in
+                    if !isFocused { commit() }
+                }
+        } else {
+            HStack(spacing: 3) {
+                ForEach(Array(stroke.displayParts.enumerated()), id: \.offset) { _, part in
+                    KeyCapChip(label: part)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { editing = true }
+        }
     }
 
     private func commit() {
         if let parsed = KeyStroke.parse(text) { stroke = parsed }
-        text = stroke.displayString
+        editing = false
+    }
+}
+
+struct KeyCapChip: View {
+    let label: String
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Text(label)
+            .font(.system(size: 11.5, weight: .medium))
+            .padding(.horizontal, 6)
+            .frame(height: 22)
+            .frame(minWidth: 22)
+            .background(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.14) : Color(red: 0.94, green: 0.94, blue: 0.95))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5)
+            )
     }
 }
 
@@ -341,6 +383,7 @@ struct KeyRecorderButton: View {
     @Binding var stroke: KeyStroke
     @State private var recording = false
     @State private var monitor: Any?
+    @State private var modifierRecorder = ModifierOnlyRecorder()
 
     var body: some View {
         Button(recording ? "Press key" : "Record") { start() }
@@ -350,20 +393,32 @@ struct KeyRecorderButton: View {
 
     private func start() {
         recording = true
-        let events: NSEvent.EventTypeMask = [.keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown]
+        modifierRecorder = ModifierOnlyRecorder()
+        let events: NSEvent.EventTypeMask = [.keyDown, .flagsChanged, .leftMouseDown, .rightMouseDown, .otherMouseDown]
         monitor = NSEvent.addLocalMonitorForEvents(matching: events) { event in
-            guard event.type == .keyDown else {
+            switch event.type {
+            case .flagsChanged:
+                switch modifierRecorder.flagsChanged(keyCode: event.keyCode) {
+                case .recording: break
+                case .bound(let code):
+                    stroke = KeyStroke(keyCode: code)
+                    cancel()
+                case .abandoned: cancel()
+                }
+                return event // modifier state must stay consistent for the rest of the UI
+            case .keyDown:
+                if event.keyCode == 53 { // Esc cancels recording without binding
+                    cancel()
+                    return nil
+                }
+                stroke = KeyStroke(keyCode: event.keyCode,
+                                   modifiers: modifierFlags(from: event.modifierFlags))
+                cancel()
+                return nil // swallow the key so it doesn't reach other UI
+            default:
                 cancel() // any click elsewhere abandons recording
                 return event
             }
-            if event.keyCode == 53 { // Esc cancels recording without binding
-                cancel()
-                return nil
-            }
-            stroke = KeyStroke(keyCode: event.keyCode,
-                               modifiers: modifierFlags(from: event.modifierFlags))
-            cancel()
-            return nil // swallow the key so it doesn't reach other UI
         }
     }
 
