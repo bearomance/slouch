@@ -13,6 +13,7 @@ echo "Assembling ${APP}…"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_SRC" "$APP/Contents/MacOS/Slouch"
+cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 
 VERSION="${SLOUCH_VERSION:-0.1.0}"
 BUILD="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
@@ -33,6 +34,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 	<string>Slouch</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleShortVersionString</key>
 	<string>${VERSION}</string>
 	<key>CFBundleVersion</key>
