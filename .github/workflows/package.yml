@@ -12,6 +12,8 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # full history so the build number (commit count) is right
 
       - name: Run tests
         run: swift test

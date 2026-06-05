@@ -14,7 +14,11 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_SRC" "$APP/Contents/MacOS/Slouch"
 
-cat > "$APP/Contents/Info.plist" <<'PLIST'
+VERSION="${SLOUCH_VERSION:-0.1.0}"
+BUILD="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
+COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+
+cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -30,9 +34,11 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
+	<string>${VERSION}</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>${BUILD}</string>
+	<key>SlouchGitCommit</key>
+	<string>${COMMIT}</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>
