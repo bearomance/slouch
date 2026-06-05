@@ -265,19 +265,19 @@ struct ButtonBindingRow: View {
 
     private func positionHint(_ b: ButtonID) -> String {
         switch b {
-        case .a: return "Bottom face button (PS: Cross)"
-        case .b: return "Right face button (PS: Circle)"
-        case .x: return "Left face button (PS: Square)"
-        case .y: return "Top face button (PS: Triangle)"
-        case .lb: return "Left shoulder button"
-        case .rb: return "Right shoulder button"
-        case .lt: return "Left trigger, below the shoulder"
-        case .rt: return "Right trigger, below the shoulder"
-        case .l3: return "Press the left stick down"
-        case .r3: return "Press the right stick down"
-        case .menu: return "Right small center button (Start / ☰)"
-        case .options: return "Left small center button (Select / View)"
-        case .dpadUp, .dpadDown, .dpadLeft, .dpadRight: return "Directional pad, left side"
+        case .a: return "Bottom face · PS ✕"
+        case .b: return "Right face · PS ○"
+        case .x: return "Left face · PS □"
+        case .y: return "Top face · PS △"
+        case .lb: return "Left shoulder"
+        case .rb: return "Right shoulder"
+        case .lt: return "Left trigger"
+        case .rt: return "Right trigger"
+        case .l3: return "Left stick click"
+        case .r3: return "Right stick click"
+        case .menu: return "Right center · ☰"
+        case .options: return "Left center · View"
+        case .dpadUp, .dpadDown, .dpadLeft, .dpadRight: return "Cross pad"
         }
     }
 }
