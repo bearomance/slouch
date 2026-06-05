@@ -130,7 +130,12 @@ struct ButtonBindingRow: View {
         HStack(spacing: 9) {
             HStack(spacing: 11) {
                 ButtonBadge(button: button)
-                Text(label(button))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(label(button))
+                    Text(positionHint(button))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -255,6 +260,24 @@ struct ButtonBindingRow: View {
         case .dpadLeft: return "D-pad ←"
         case .dpadRight: return "D-pad →"
         default: return b.rawValue.uppercased()
+        }
+    }
+
+    private func positionHint(_ b: ButtonID) -> String {
+        switch b {
+        case .a: return "Bottom face button (PS: Cross)"
+        case .b: return "Right face button (PS: Circle)"
+        case .x: return "Left face button (PS: Square)"
+        case .y: return "Top face button (PS: Triangle)"
+        case .lb: return "Left shoulder button"
+        case .rb: return "Right shoulder button"
+        case .lt: return "Left trigger, below the shoulder"
+        case .rt: return "Right trigger, below the shoulder"
+        case .l3: return "Press the left stick down"
+        case .r3: return "Press the right stick down"
+        case .menu: return "Right small center button (Start / ☰)"
+        case .options: return "Left small center button (Select / View)"
+        case .dpadUp, .dpadDown, .dpadLeft, .dpadRight: return "Directional pad, left side"
         }
     }
 }
