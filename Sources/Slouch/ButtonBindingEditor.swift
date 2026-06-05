@@ -132,9 +132,11 @@ struct ButtonBindingRow: View {
                 ButtonBadge(button: button)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(label(button))
-                    Text(positionHint(button))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+                    if let hint = positionHint(button) {
+                        Text(hint)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -259,11 +261,13 @@ struct ButtonBindingRow: View {
         case .dpadDown: return "D-pad ↓"
         case .dpadLeft: return "D-pad ←"
         case .dpadRight: return "D-pad →"
+        case .menu: return "Right center · ☰"
+        case .options: return "Left center · View"
         default: return b.rawValue.uppercased()
         }
     }
 
-    private func positionHint(_ b: ButtonID) -> String {
+    private func positionHint(_ b: ButtonID) -> String? {
         switch b {
         case .a: return "Bottom face · PS ✕"
         case .b: return "Right face · PS ○"
@@ -275,8 +279,7 @@ struct ButtonBindingRow: View {
         case .rt: return "Right trigger"
         case .l3: return "Left stick click"
         case .r3: return "Right stick click"
-        case .menu: return "Right center · ☰"
-        case .options: return "Left center · View"
+        case .menu, .options: return nil
         case .dpadUp, .dpadDown, .dpadLeft, .dpadRight: return "Cross pad"
         }
     }
