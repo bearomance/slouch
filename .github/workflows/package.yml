@@ -18,6 +18,28 @@ jobs:
       - name: Run tests
         run: swift test
 
+      - name: Import signing identity
+        env:
+          P12_BASE64: ${{ secrets.SLOUCH_SIGN_P12 }}
+          P12_PASSWORD: ${{ secrets.SLOUCH_SIGN_P12_PASSWORD }}
+        run: |
+          if [ -z "$P12_BASE64" ]; then
+            echo "No signing secret configured; build will be ad-hoc signed."
+            exit 0
+          fi
+          echo "$P12_BASE64" | base64 -d > sign.p12
+          security create-keychain -p ci ci.keychain
+          security set-keychain-settings -lut 21600 ci.keychain
+          security unlock-keychain -p ci ci.keychain
+          security import sign.p12 -k ci.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -d user -s ci.keychain
+          # Let codesign use the key without a UI prompt.
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci ci.keychain > /dev/null
+          # Self-signed cert must be trusted or codesign rejects the identity.
+          openssl pkcs12 -in sign.p12 -clcerts -nokeys -passin "pass:$P12_PASSWORD" -out cert.pem
+          sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain cert.pem
+          rm sign.p12
+
       - name: Package Slouch.app
         run: ./Scripts/build-app.sh
 
