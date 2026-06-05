@@ -51,13 +51,39 @@ jobs:
           name: Slouch.app
           path: Slouch.app.zip
 
-      - name: Update rolling "latest" release
+      - name: Create build release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete latest --yes --cleanup-tag || true
-          gh release create latest Slouch.app.zip \
-            --prerelease \
+          BUILD=$(git rev-list --count HEAD)
+          SHORT=${GITHUB_SHA:0:7}
+          TAG="build-${BUILD}-${SHORT}"
+
+          # Changes since the previous release (fall back to the last 10 commits).
+          PREV_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || true)
+          if [ -n "$PREV_TAG" ] && git rev-parse -q --verify "$PREV_TAG" > /dev/null; then
+            CHANGES=$(git log --pretty='- %s' "$PREV_TAG"..HEAD)
+          else
+            CHANGES=$(git log --pretty='- %s' -10)
+          fi
+
+          {
+            echo "**⬇ 下载: [Slouch.app.zip](https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/Slouch.app.zip)**"
+            echo
+            echo "## Changes"
+            echo "${CHANGES:-- (no new commits)}"
+          } > notes.md
+
+          gh release create "$TAG" Slouch.app.zip \
             --target "$GITHUB_SHA" \
-            --title "Latest build" \
-            --notes "Auto-built from \`${GITHUB_SHA:0:7}\`. Ad-hoc signed: grant Accessibility again after replacing the app."
+            --title "Build ${BUILD} (${SHORT})" \
+            --notes-file notes.md
+
+          # One-time cleanup of the old rolling release; no-op afterwards.
+          gh release delete latest --yes --cleanup-tag || true
+
+          # Keep the 10 newest releases.
+          gh release list --limit 100 --json tagName --jq '.[10:][].tagName' |
+          while read -r tag; do
+            gh release delete "$tag" --yes --cleanup-tag
+          done
