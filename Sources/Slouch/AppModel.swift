@@ -10,6 +10,8 @@ final class AppModel: ObservableObject {
     @Published var controllerName: String?
     @Published var isReconnecting = false
     @Published var battery: GamepadBattery?
+    @Published var availableUpdate: AvailableUpdate?
+    @Published var isUpdating = false
     @Published var isTrusted = PermissionsManager.isTrusted()
     @Published var config: Config { didSet { applyConfig() } }
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled {
@@ -77,9 +79,37 @@ final class AppModel: ObservableObject {
             guard let self else { return }
             Task { @MainActor in self.updateBattery() }
         }
+
+        checkForUpdate()
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 24 * 3600, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in self.checkForUpdate() }
+        }
     }
 
     private var batteryTimer: Timer?
+    private var updateTimer: Timer?
+
+    private func checkForUpdate() {
+        guard config.settings.checkForUpdates else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.availableUpdate = await SelfUpdater.checkForUpdate()
+        }
+    }
+
+    func installUpdate() {
+        guard let update = availableUpdate, !isUpdating else { return }
+        isUpdating = true
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                try await SelfUpdater.install(update) // terminates the app on success
+            } catch {
+                self.isUpdating = false
+            }
+        }
+    }
 
     private func updateBattery() {
         let current = source.battery
@@ -162,5 +192,6 @@ final class AppModel: ObservableObject {
     deinit {
         if let link = displayLink { CVDisplayLinkStop(link) }
         batteryTimer?.invalidate()
+        updateTimer?.invalidate()
     }
 }

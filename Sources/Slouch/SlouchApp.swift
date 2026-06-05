@@ -92,6 +92,13 @@ struct MenuContent: View {
                 PermissionsManager.openAccessibilitySettings()
             }
         }
+        if let update = model.availableUpdate {
+            Divider()
+            Button(model.isUpdating ? "Updating" : "Update to build \(update.build)") {
+                model.installUpdate()
+            }
+            .disabled(model.isUpdating)
+        }
         Divider()
         Button("General Setting") {
             openWindow(id: SettingsWindowID.general)

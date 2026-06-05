@@ -65,8 +65,9 @@ synthesizes mouse/keyboard input via **CGEvent**. On system wake it re-scans and
 re-binds the controller automatically. See the
 [design doc](docs/superpowers/specs) for the full architecture.
 
-No API keys, secrets, or network access — Slouch runs entirely locally on free
-Apple frameworks.
+No API keys or secrets — Slouch runs locally on free Apple frameworks. The
+only network access is a daily update check against GitHub releases (one-click
+in-app update; can be turned off in General settings).
 
 ## Building
 

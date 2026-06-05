@@ -49,6 +49,10 @@ struct GeneralTab: View {
                 SettingsRow(color: .orange, symbol: "bolt.fill", title: "Enable on launch") {
                     Toggle("", isOn: $model.config.settings.enableOnLaunch).labelsHidden()
                 }
+                SettingsRow(color: .blue, symbol: "arrow.down.circle",
+                            title: "Check for updates", subtitle: "Once a day, from GitHub releases") {
+                    Toggle("", isOn: $model.config.settings.checkForUpdates).labelsHidden()
+                }
             }
             Section("Sensitivity") {
                 SettingsRow(color: .blue, symbol: "cursorarrow",
