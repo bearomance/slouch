@@ -110,11 +110,11 @@ struct MenuContent: View {
         }
         Button("Quit Slouch") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
-        Divider()
-        Text(Self.versionLine)
     }
+}
 
-    private static let versionLine: String = {
+enum AppInfo {
+    static let versionLine: String = {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "dev"
         let build = info?["CFBundleVersion"] as? String

@@ -103,6 +103,12 @@ struct GeneralTab: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
+            Section("About") {
+                SettingsRow(color: .graphite, symbol: "info", title: "Version") {
+                    Text(AppInfo.versionLine)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .formStyle(.grouped)
         .contentShape(Rectangle())
