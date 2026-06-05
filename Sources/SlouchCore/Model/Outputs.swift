@@ -20,6 +20,17 @@ public struct KeyStroke: Codable, Equatable, Sendable {
         self.keyCode = keyCode
         self.modifiers = modifiers
     }
+
+    // Physical presses of function-block keys carry the Fn (secondary-fn)
+    // flag; system symbolic hotkeys like ⌥⌘F5 only match when it's present.
+    public var needsFnFlag: Bool { Self.fnFlaggedKeyCodes.contains(keyCode) }
+
+    private static let fnFlaggedKeyCodes: Set<UInt16> = [
+        122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111, // F1–F12
+        105, 107, 113, 106, 64, 79, 80, 90,                     // F13–F20
+        114, 115, 116, 117, 119, 121,                           // help, home, pgup, fwd-delete, end, pgdn
+        123, 124, 125, 126,                                     // arrows
+    ]
 }
 
 public enum StickRole: String, Codable, Equatable, Sendable {

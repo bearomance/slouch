@@ -109,7 +109,8 @@ final class CGOutputSynthesizer: OutputSynthesizer {
 
     private func key(_ stroke: KeyStroke, down: Bool) {
         let source = CGEventSource(stateID: .hidSystemState)
-        let flags = cgFlags(stroke.modifiers)
+        var flags = cgFlags(stroke.modifiers)
+        if stroke.needsFnFlag { flags.insert(.maskSecondaryFn) }
         if let modifierFlags = Self.standaloneModifierFlags[stroke.keyCode] {
             let e = CGEvent(keyboardEventSource: source, virtualKey: stroke.keyCode, keyDown: down)
             e?.type = .flagsChanged
