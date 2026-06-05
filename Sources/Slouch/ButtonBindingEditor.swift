@@ -40,6 +40,7 @@ struct ButtonsTab: View {
     private let groups: [(title: String, buttons: [ButtonID])] = [
         ("Face buttons", [.a, .b, .x, .y]),
         ("Shoulders & triggers", [.lb, .rb, .lt, .rt]),
+        ("Stick clicks", [.l3, .r3]),
         ("System", [.menu, .options]),
         ("D-pad", [.dpadUp, .dpadDown, .dpadLeft, .dpadRight]),
     ]
