@@ -6,6 +6,7 @@ final class CGOutputSynthesizer: OutputSynthesizer {
     private var downButtons: Set<MouseButton> = []
     private var scrollResidualX: Double = 0
     private var scrollResidualY: Double = 0
+    private var clickTracker = ClickStateTracker()
 
     func perform(_ command: SynthCommand) {
         switch command {
@@ -70,7 +71,16 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         case .right: type = down ? .rightMouseDown : .rightMouseUp; cgButton = .right
         case .middle: type = down ? .otherMouseDown : .otherMouseUp; cgButton = .center
         }
+        let state: Int
+        if down {
+            state = clickTracker.registerDown(button: button, x: location.x, y: location.y,
+                                              time: ProcessInfo.processInfo.systemUptime,
+                                              doubleClickInterval: NSEvent.doubleClickInterval)
+        } else {
+            state = clickTracker.clickState
+        }
         let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: location, mouseButton: cgButton)
+        event?.setIntegerValueField(.mouseEventClickState, value: Int64(state))
         event?.post(tap: .cghidEventTap)
     }
 
