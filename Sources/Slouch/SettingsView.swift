@@ -75,7 +75,7 @@ struct GeneralTab: View {
                 }
                 SettingsRow(color: .teal, symbol: "scope",
                             title: "Precision speed",
-                            subtitle: "10 – 80% of cursor speed while Precision Cursor is held") {
+                            subtitle: "10 – 80% of cursor speed") {
                     SliderInputRow(value: $model.config.settings.precisionFactor,
                                    range: 0.1...0.8, step: 0.05,
                                    format: .percent.precision(.fractionLength(0)))
