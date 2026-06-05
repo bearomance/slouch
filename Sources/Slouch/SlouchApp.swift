@@ -82,6 +82,10 @@ struct MenuContent: View {
         } else {
             Text(model.isConnected ? "Controller: connected" : "Controller: not found")
         }
+        if model.isConnected, let battery = model.battery {
+            Text("Battery: \(Int((battery.level * 100).rounded()))%"
+                 + (battery.isCharging ? " (charging)" : ""))
+        }
         if !model.isTrusted {
             Text("⚠︎ Accessibility permission needed")
             Button("Open Accessibility Settings") {

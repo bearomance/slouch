@@ -9,6 +9,7 @@ final class AppModel: ObservableObject {
     @Published var isConnected = false
     @Published var controllerName: String?
     @Published var isReconnecting = false
+    @Published var battery: GamepadBattery?
     @Published var isTrusted = PermissionsManager.isTrusted()
     @Published var config: Config { didSet { applyConfig() } }
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled {
@@ -45,6 +46,7 @@ final class AppModel: ObservableObject {
                 self.isConnected = connected
                 self.controllerName = self.source.controllerName
                 if connected { self.isReconnecting = false }
+                self.updateBattery()
                 self.updateDisplayLink()
             }
         }
@@ -69,6 +71,18 @@ final class AppModel: ObservableObject {
             // didSet (and thus start()) doesn't fire for assignments inside init.
             Task { @MainActor [weak self] in self?.isEnabled = true }
         }
+
+        updateBattery()
+        batteryTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.updateBattery() }
+        }
+    }
+
+    private var batteryTimer: Timer?
+
+    private func updateBattery() {
+        let current = source.battery
+        if current != battery { battery = current }
     }
 
     private func applyConfig() {
@@ -146,5 +160,6 @@ final class AppModel: ObservableObject {
 
     deinit {
         if let link = displayLink { CVDisplayLinkStop(link) }
+        batteryTimer?.invalidate()
     }
 }

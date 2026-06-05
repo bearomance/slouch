@@ -9,6 +9,13 @@ final class GCGamepadSource: GamepadSource {
 
     var controllerName: String? { controller?.vendorName }
 
+    var battery: GamepadBattery? {
+        guard let b = controller?.battery, b.batteryLevel >= 0,
+              b.batteryState != .unknown else { return nil }
+        return GamepadBattery(level: Double(b.batteryLevel),
+                              isCharging: b.batteryState == .charging)
+    }
+
     init() {
         // LSUIElement apps are never frontmost; without this the framework drops all input.
         GCController.shouldMonitorBackgroundEvents = true
