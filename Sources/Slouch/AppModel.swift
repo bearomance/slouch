@@ -45,6 +45,7 @@ final class AppModel: ObservableObject {
                 self.isConnected = connected
                 self.controllerName = self.source.controllerName
                 if connected { self.isReconnecting = false }
+                self.updateDisplayLink()
             }
         }
         self.isConnected = source.isConnected
@@ -85,10 +86,19 @@ final class AppModel: ObservableObject {
             isEnabled = false
             return
         }
-        startDisplayLink()
+        updateDisplayLink()
     }
 
     private func stop() { stopDisplayLink() }
+
+    // No controller → nothing to poll; don't spin the display link.
+    private func updateDisplayLink() {
+        if isEnabled && isConnected {
+            if displayLink == nil { startDisplayLink() }
+        } else {
+            stopDisplayLink()
+        }
+    }
 
     private func tick() {
         let now = CACurrentMediaTime()
