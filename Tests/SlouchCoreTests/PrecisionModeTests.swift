@@ -14,12 +14,30 @@ final class PrecisionModeTests: XCTestCase {
         return nil
     }
 
-    func test_precisionHeld_slowsCursor() {
+    func test_precisionHeld_slowsCursor_byDefaultFactor() {
         let engine = makeEngine()
         let state = GamepadState(leftStick: StickVector(x: 1, y: 0), pressed: [.lb])
         let normal = makeEngine().process(state: GamepadState(leftStick: StickVector(x: 1, y: 0)), dt: 0.5)
         let slowed = engine.process(state: state, dt: 0.5)
-        XCTAssertEqual(mouseDx(slowed)!, mouseDx(normal)! * MappingEngine.precisionFactor, accuracy: 1e-9)
+        XCTAssertEqual(mouseDx(slowed)!, mouseDx(normal)! * 0.3, accuracy: 1e-9)
+    }
+
+    func test_precisionFactor_isConfigurable() {
+        var settings = Settings.default
+        settings.precisionFactor = 0.5
+        let engine = MappingEngine(
+            mapping: Mapping(leftStick: .mouseMove, rightStick: .scroll,
+                             buttons: [.lb: .precision]),
+            settings: settings)
+        let normal = makeEngine().process(state: GamepadState(leftStick: StickVector(x: 1, y: 0)), dt: 0.5)
+        let slowed = engine.process(state: GamepadState(leftStick: StickVector(x: 1, y: 0), pressed: [.lb]), dt: 0.5)
+        XCTAssertEqual(mouseDx(slowed)!, mouseDx(normal)! * 0.5, accuracy: 1e-9)
+    }
+
+    func test_settingsWithoutPrecisionFactor_decodesToDefault() throws {
+        let json = #"{"cursorSpeed":1400,"scrollSpeed":30,"deadZone":0.05}"#
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.precisionFactor, 0.3)
     }
 
     func test_precisionReleased_restoresSpeed() {

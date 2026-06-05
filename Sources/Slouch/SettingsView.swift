@@ -73,6 +73,13 @@ struct GeneralTab: View {
                                    range: 0...0.5, step: 0.01,
                                    format: .percent.precision(.fractionLength(0)))
                 }
+                SettingsRow(color: .teal, symbol: "scope",
+                            title: "Precision speed",
+                            subtitle: "10 – 80% of cursor speed while Precision Cursor is held") {
+                    SliderInputRow(value: $model.config.settings.precisionFactor,
+                                   range: 0.1...0.8, step: 0.05,
+                                   format: .percent.precision(.fractionLength(0)))
+                }
             }
             Section("Sticks") {
                 SettingsRow(color: .teal, symbol: "l.joystick",

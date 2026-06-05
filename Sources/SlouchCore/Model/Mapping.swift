@@ -40,16 +40,18 @@ public struct Settings: Codable, Equatable, Sendable {
     public var enableOnLaunch: Bool
     public var invertScroll: Bool
     public var checkForUpdates: Bool
+    public var precisionFactor: Double // cursor speed multiplier while Precision Cursor is held
 
     public init(cursorSpeed: Double = 1500, scrollSpeed: Double = 50, deadZone: Double = 0.05,
                 enableOnLaunch: Bool = true, invertScroll: Bool = false,
-                checkForUpdates: Bool = true) {
+                checkForUpdates: Bool = true, precisionFactor: Double = 0.3) {
         self.cursorSpeed = cursorSpeed
         self.scrollSpeed = scrollSpeed
         self.deadZone = deadZone
         self.enableOnLaunch = enableOnLaunch
         self.invertScroll = invertScroll
         self.checkForUpdates = checkForUpdates
+        self.precisionFactor = precisionFactor
     }
 
     public init(from decoder: Decoder) throws {
@@ -61,6 +63,7 @@ public struct Settings: Codable, Equatable, Sendable {
         enableOnLaunch = try c.decodeIfPresent(Bool.self, forKey: .enableOnLaunch) ?? true
         invertScroll = try c.decodeIfPresent(Bool.self, forKey: .invertScroll) ?? false
         checkForUpdates = try c.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? true
+        precisionFactor = try c.decodeIfPresent(Double.self, forKey: .precisionFactor) ?? 0.3
     }
 
     public static let `default` = Settings()

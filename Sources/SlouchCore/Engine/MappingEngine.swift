@@ -9,7 +9,6 @@ public final class MappingEngine {
 
     public static let repeatInitialDelay = 0.4
     public static let repeatInterval = 0.08
-    public static let precisionFactor = 0.3
 
     public init(mapping: Mapping, settings: Settings) {
         self.mapping = mapping
@@ -66,7 +65,7 @@ public final class MappingEngine {
         let speed = curvedSpeed(magnitude: mag)
         switch role {
         case .mouseMove:
-            let factor = precisionHeld ? Self.precisionFactor : 1
+            let factor = precisionHeld ? settings.precisionFactor : 1
             let s = speed * settings.cursorSpeed * dt * factor
             return [.moveMouse(dx: unitX * s, dy: -unitY * s)]
         case .scroll:
