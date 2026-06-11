@@ -4,7 +4,7 @@ import ServiceManagement
 import SlouchCore
 
 @MainActor
-final class AppModel: ObservableObject {
+final class AppModel: NSObject, ObservableObject {
     @Published var isEnabled = false { didSet { isEnabled ? start() : stop() } }
     @Published var isConnected = false
     @Published var controllerName: String?
@@ -31,7 +31,7 @@ final class AppModel: ObservableObject {
     private let synth: OutputSynthesizer
     private let engine: MappingEngine
     private var wakeWatcher: WakeWatcher?
-    private var displayLink: CVDisplayLink?
+    private var displayLink: CADisplayLink?
     private var lastTick: CFTimeInterval = 0
 
     init(source: GamepadSource = GCGamepadSource(),
@@ -41,6 +41,7 @@ final class AppModel: ObservableObject {
         let loaded = store.load()
         self.config = loaded
         self.engine = MappingEngine(mapping: loaded.mapping, settings: loaded.settings)
+        super.init()
 
         self.source.onConnectionChange = { [weak self] connected in
             Task { @MainActor in
@@ -67,6 +68,12 @@ final class AppModel: ObservableObject {
             forName: NSApplication.didBecomeActiveNotification,
             object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.recheckPermission() }
+            }
+
+        _ = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.handleScreenChange() }
             }
 
         if loaded.settings.enableOnLaunch {
@@ -145,7 +152,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    private func tick() {
+    @objc private func tick(_ link: CADisplayLink) {
         let now = CACurrentMediaTime()
         let dt = lastTick == 0 ? 1.0 / 60 : now - lastTick
         lastTick = now
@@ -170,27 +177,27 @@ final class AppModel: ObservableObject {
     }
 
     private func startDisplayLink() {
-        var link: CVDisplayLink?
-        CVDisplayLinkCreateWithActiveCGDisplays(&link)
-        guard let link else { return }
-        let userInfo = Unmanaged.passUnretained(self).toOpaque()
-        CVDisplayLinkSetOutputCallback(link, { _, _, _, _, _, ctx in
-            let model = Unmanaged<AppModel>.fromOpaque(ctx!).takeUnretainedValue()
-            Task { @MainActor in model.tick() }
-            return kCVReturnSuccess
-        }, userInfo)
-        CVDisplayLinkStart(link)
+        guard let link = NSScreen.main?.displayLink(target: self, selector: #selector(tick(_:)))
+        else { return }
+        link.add(to: .main, forMode: .common)
         displayLink = link
     }
 
     private func stopDisplayLink() {
-        if let link = displayLink { CVDisplayLinkStop(link) }
+        displayLink?.invalidate()
         displayLink = nil
         lastTick = 0
     }
 
+    // The link is bound to one screen; rebind when displays change (TV on/off).
+    private func handleScreenChange() {
+        guard displayLink != nil else { return }
+        stopDisplayLink()
+        updateDisplayLink()
+    }
+
     deinit {
-        if let link = displayLink { CVDisplayLinkStop(link) }
+        displayLink?.invalidate()
         batteryTimer?.invalidate()
         updateTimer?.invalidate()
     }
