@@ -41,6 +41,8 @@ unzip, and launch. On first run:
   Held buttons auto-repeat like a real keyboard.
 - **Bare modifier keys** — bind a button to just ⌘ / ⌥ / ⇧ / ⌃ (left and right
   distinguished), e.g. hold-to-talk on Right Option.
+- **Media keys** — play/pause, next/previous track, volume up/down, mute.
+  Held volume buttons repeat like the keyboard.
 - **System functions** — sleep, open a URL in the default browser, toggle the
   macOS Accessibility Keyboard.
 - **Menu-bar app** — enable/disable, connection status, controller battery

@@ -71,4 +71,4 @@ diagram):
 
 v1 is intentionally minimal. Out of scope unless the spec changes: multiple
 mapping profiles, response-curve editor, 8-way thumbstick mode, drift
-calibration, media/volume keys, relative-mouse mode, gyro/rumble.
+calibration, relative-mouse mode, gyro/rumble.

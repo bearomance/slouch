@@ -28,11 +28,21 @@ public final class MappingEngine {
     /// Synthesized keys get no system auto-repeat (that lives in the keyboard
     /// driver), so held keystroke buttons re-fire here. Bare modifiers don't
     /// repeat — real keyboards don't repeat them either.
+    private func repeatCommand(for button: ButtonID) -> SynthCommand? {
+        switch mapping.buttons[button] {
+        case .keystroke(let stroke)? where !KeyStroke.modifierKeyCodes.contains(stroke.keyCode):
+            return .keyRepeat(stroke)
+        case .mediaKey(let key)? where key.repeats:
+            return .mediaKey(key)
+        default:
+            return nil
+        }
+    }
+
     private func repeatCommands(state: GamepadState, dt: Double) -> [SynthCommand] {
         var commands: [SynthCommand] = []
         for button in state.pressed {
-            guard case .keystroke(let stroke)? = mapping.buttons[button],
-                  !KeyStroke.modifierKeyCodes.contains(stroke.keyCode) else { continue }
+            guard let command = repeatCommand(for: button) else { continue }
             guard previouslyPressed.contains(button) else {
                 repeatClocks[button] = (held: 0, nextFire: repeatInitialDelay)
                 continue
@@ -40,7 +50,7 @@ public final class MappingEngine {
             guard var clock = repeatClocks[button] else { continue }
             clock.held += dt
             if clock.held >= clock.nextFire {
-                commands.append(.keyRepeat(stroke))
+                commands.append(command)
                 clock.nextFire = clock.held + repeatInterval
             }
             repeatClocks[button] = clock
@@ -86,6 +96,7 @@ public final class MappingEngine {
             switch mapping.buttons[button] {
             case .mouseClick(let b): commands.append(.mouseDown(b))
             case .keystroke(let k): commands.append(.keyDown(k))
+            case .mediaKey(let k): commands.append(.mediaKey(k))
             case .openURL(let url): commands.append(.openURL(url))
             case .keyboardViewer: commands.append(.keyboardViewer)
             case .sleep, .precision, OutputAction.none?, nil: break
@@ -98,7 +109,8 @@ public final class MappingEngine {
             // Sleep fires on release: triggering on press lets the release
             // HID report wake the Mac right back up.
             case .sleep: commands.append(.sleep)
-            case .openURL, .keyboardViewer, .precision, OutputAction.none?, nil: break
+            // Media keys send a complete down+up pair on press; nothing on release.
+            case .mediaKey, .openURL, .keyboardViewer, .precision, OutputAction.none?, nil: break
             }
         }
         return commands

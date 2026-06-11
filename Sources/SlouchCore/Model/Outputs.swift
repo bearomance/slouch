@@ -40,9 +40,32 @@ public enum StickRole: String, Codable, Equatable, Sendable {
     case mouseMove, scroll, none
 }
 
+/// The Mac's media keys — not regular key codes; synthesized as
+/// NX_SYSDEFINED system events.
+public enum MediaKey: String, Codable, CaseIterable, Equatable, Sendable {
+    case playPause, nextTrack, previousTrack, volumeUp, volumeDown, mute
+
+    /// NX_KEYTYPE_* from IOKit's ev_keymap.h.
+    public var nxKeyCode: Int32 {
+        switch self {
+        case .playPause: return 16
+        case .nextTrack: return 17
+        case .previousTrack: return 18
+        case .volumeUp: return 0
+        case .volumeDown: return 1
+        case .mute: return 7
+        }
+    }
+
+    /// Volume keys repeat while held, like on a real keyboard. Mute toggles
+    /// and play/next/previous have no hold semantics, so they must not.
+    public var repeats: Bool { self == .volumeUp || self == .volumeDown }
+}
+
 public enum OutputAction: Codable, Equatable, Sendable {
     case mouseClick(MouseButton)
     case keystroke(KeyStroke)
+    case mediaKey(MediaKey)
     case openURL(String)
     case sleep
     case keyboardViewer
@@ -154,6 +177,7 @@ public enum SynthCommand: Equatable, Sendable {
     case keyDown(KeyStroke)
     case keyUp(KeyStroke)
     case keyRepeat(KeyStroke)
+    case mediaKey(MediaKey) // synthesizer posts a complete down+up pair
     case openURL(String)
     case sleep
     case keyboardViewer

@@ -17,6 +17,7 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         case let .keyDown(stroke): key(stroke, down: true)
         case let .keyUp(stroke): key(stroke, down: false)
         case let .keyRepeat(stroke): keyRepeat(stroke)
+        case let .mediaKey(key): mediaKey(key)
         case .openURL, .sleep, .keyboardViewer: break // handled by SystemActions, not the synthesizer
         }
     }
@@ -83,6 +84,24 @@ final class CGOutputSynthesizer: OutputSynthesizer {
         let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: location, mouseButton: cgButton)
         event?.setIntegerValueField(.mouseEventClickState, value: Int64(state))
         event?.post(tap: .cghidEventTap)
+    }
+
+    // Media keys aren't regular key codes; they ride NX_SYSDEFINED events
+    // (subtype 8 = AUX_CONTROL_BUTTONS, data1 = keyCode<<16 | down/up flag).
+    private func mediaKey(_ key: MediaKey) {
+        postMediaKey(key, down: true)
+        postMediaKey(key, down: false)
+    }
+
+    private func postMediaKey(_ key: MediaKey, down: Bool) {
+        let flags: UInt = down ? 0xA00 : 0xB00
+        let data1 = (Int(key.nxKeyCode) << 16) | Int(flags)
+        let event = NSEvent.otherEvent(with: .systemDefined, location: .zero,
+                                       modifierFlags: NSEvent.ModifierFlags(rawValue: flags),
+                                       timestamp: ProcessInfo.processInfo.systemUptime,
+                                       windowNumber: 0, context: nil,
+                                       subtype: 8, data1: data1, data2: -1)
+        event?.cgEvent?.post(tap: .cghidEventTap)
     }
 
     private func cgFlags(_ mods: ModifierFlags) -> CGEventFlags {

@@ -15,8 +15,20 @@ private enum ActionCategory: String, CaseIterable, Identifiable {
     case off = "Off"
     case mouse = "Mouse"
     case keyboard = "Keyboard"
+    case media = "Media"
     case function = "Function"
     var id: String { rawValue }
+}
+
+private func mediaKeyLabel(_ key: MediaKey) -> String {
+    switch key {
+    case .playPause: return "Play / Pause"
+    case .nextTrack: return "Next track"
+    case .previousTrack: return "Previous track"
+    case .volumeUp: return "Volume up"
+    case .volumeDown: return "Volume down"
+    case .mute: return "Mute"
+    }
 }
 
 private enum FunctionKind: String, CaseIterable, Identifiable {
@@ -31,6 +43,7 @@ private func category(of action: OutputAction?) -> ActionCategory {
     switch action {
     case .mouseClick: return .mouse
     case .keystroke: return .keyboard
+    case .mediaKey: return .media
     case .openURL, .sleep, .keyboardViewer, .precision: return .function
     case .some(.none), nil: return .off
     }
@@ -169,6 +182,11 @@ struct ButtonBindingRow: View {
             .labelsHidden()
         case .keyboard:
             KeyComboField(stroke: keystrokeBinding)
+        case .media:
+            Picker("", selection: mediaKeyBinding) {
+                ForEach(MediaKey.allCases, id: \.self) { Text(mediaKeyLabel($0)).tag($0) }
+            }
+            .labelsHidden()
         case .function:
             Picker("", selection: functionBinding) {
                 ForEach(FunctionKind.allCases) { Text($0.rawValue).tag($0) }
@@ -206,6 +224,7 @@ struct ButtonBindingRow: View {
                 case .off: action = OutputAction.none
                 case .mouse: action = .mouseClick(.left)
                 case .keyboard: action = .keystroke(KeyStroke(keyCode: 49)) // default Space
+                case .media: action = .mediaKey(.playPause)
                 case .function: action = .sleep
                 }
             }
@@ -216,6 +235,13 @@ struct ButtonBindingRow: View {
         Binding(
             get: { if case .mouseClick(let b)? = action { return b }; return .left },
             set: { action = .mouseClick($0) }
+        )
+    }
+
+    private var mediaKeyBinding: Binding<MediaKey> {
+        Binding(
+            get: { if case .mediaKey(let k)? = action { return k }; return .playPause },
+            set: { action = .mediaKey($0) }
         )
     }
 
