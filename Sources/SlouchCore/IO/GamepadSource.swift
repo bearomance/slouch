@@ -23,9 +23,12 @@ public protocol GamepadSource: AnyObject {
     var onConnectionChange: ((Bool) -> Void)? { get set }
     /// Tear down and re-establish controller observation (used after wake).
     func rebind()
+    /// Turn the controller's motion sensors on or off (they cost battery).
+    func setMotionEnabled(_ enabled: Bool)
 }
 
 public extension GamepadSource {
     var controllerName: String? { nil }
     var battery: GamepadBattery? { nil }
+    func setMotionEnabled(_ enabled: Bool) {}
 }

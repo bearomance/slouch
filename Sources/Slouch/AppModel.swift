@@ -48,7 +48,10 @@ final class AppModel: NSObject, ObservableObject {
                 guard let self else { return }
                 self.isConnected = connected
                 self.controllerName = self.source.controllerName
-                if connected { self.isReconnecting = false }
+                if connected {
+                    self.isReconnecting = false
+                    self.engine.resetGyroCalibration()
+                }
                 self.updateBattery()
                 self.updateDisplayLink()
             }
@@ -75,6 +78,8 @@ final class AppModel: NSObject, ObservableObject {
             object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.handleScreenChange() }
             }
+
+        applyMotionState()
 
         if loaded.settings.enableOnLaunch {
             // didSet (and thus start()) doesn't fire for assignments inside init.
@@ -126,7 +131,13 @@ final class AppModel: NSObject, ObservableObject {
     private func applyConfig() {
         engine.mapping = config.mapping
         engine.settings = config.settings
+        applyMotionState()
         try? store.save(config)
+    }
+
+    // The IMU drains the controller's battery; only run it when bound.
+    private func applyMotionState() {
+        source.setMotionEnabled(config.mapping.buttons.values.contains(.gyroPointer))
     }
 
     func recheckPermission() { isTrusted = PermissionsManager.isTrusted() }

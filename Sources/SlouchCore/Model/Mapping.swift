@@ -41,10 +41,14 @@ public struct Settings: Codable, Equatable, Sendable {
     public var invertScroll: Bool
     public var checkForUpdates: Bool
     public var precisionFactor: Double // cursor speed multiplier while Precision Cursor is held
+    public var gyroSensitivity: Double // px per degree of controller rotation
+    public var gyroInvertX: Bool
+    public var gyroInvertY: Bool
 
     public init(cursorSpeed: Double = 1500, scrollSpeed: Double = 50, deadZone: Double = 0.05,
                 enableOnLaunch: Bool = true, invertScroll: Bool = false,
-                checkForUpdates: Bool = true, precisionFactor: Double = 0.3) {
+                checkForUpdates: Bool = true, precisionFactor: Double = 0.3,
+                gyroSensitivity: Double = 50, gyroInvertX: Bool = false, gyroInvertY: Bool = false) {
         self.cursorSpeed = cursorSpeed
         self.scrollSpeed = scrollSpeed
         self.deadZone = deadZone
@@ -52,6 +56,9 @@ public struct Settings: Codable, Equatable, Sendable {
         self.invertScroll = invertScroll
         self.checkForUpdates = checkForUpdates
         self.precisionFactor = precisionFactor
+        self.gyroSensitivity = gyroSensitivity
+        self.gyroInvertX = gyroInvertX
+        self.gyroInvertY = gyroInvertY
     }
 
     public init(from decoder: Decoder) throws {
@@ -64,6 +71,9 @@ public struct Settings: Codable, Equatable, Sendable {
         invertScroll = try c.decodeIfPresent(Bool.self, forKey: .invertScroll) ?? false
         checkForUpdates = try c.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? true
         precisionFactor = try c.decodeIfPresent(Double.self, forKey: .precisionFactor) ?? 0.3
+        gyroSensitivity = try c.decodeIfPresent(Double.self, forKey: .gyroSensitivity) ?? 50
+        gyroInvertX = try c.decodeIfPresent(Bool.self, forKey: .gyroInvertX) ?? false
+        gyroInvertY = try c.decodeIfPresent(Bool.self, forKey: .gyroInvertY) ?? false
     }
 
     public static let `default` = Settings()

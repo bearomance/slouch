@@ -70,6 +70,7 @@ public enum OutputAction: Codable, Equatable, Sendable {
     case sleep
     case keyboardViewer
     case precision // hold to slow the cursor for small targets
+    case gyroPointer // hold to steer the cursor with the controller's gyro
     case none
 }
 

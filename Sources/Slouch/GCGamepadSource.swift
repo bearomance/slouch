@@ -34,8 +34,22 @@ final class GCGamepadSource: GamepadSource {
         }
     }
 
+    private var motionEnabled = false
+
+    func setMotionEnabled(_ enabled: Bool) {
+        motionEnabled = enabled
+        applyMotionState()
+    }
+
+    // sensorsActive is per-GCController state; re-apply on every bind.
+    private func applyMotionState() {
+        guard let motion = controller?.motion, motion.hasRotationRate else { return }
+        motion.sensorsActive = motionEnabled
+    }
+
     private func bind() {
         controller = GCController.controllers().first { $0.extendedGamepad != nil }
+        applyMotionState()
         onConnectionChange?(isConnected)
     }
 
@@ -62,11 +76,19 @@ final class GCGamepadSource: GamepadSource {
         if pad.dpad.left.isPressed { pressed.insert(.dpadLeft) }
         if pad.dpad.right.isPressed { pressed.insert(.dpadRight) }
 
+        var rotation: RotationRate?
+        if let motion = controller?.motion, motion.sensorsActive, motion.hasRotationRate {
+            rotation = RotationRate(x: motion.rotationRate.x,
+                                    y: motion.rotationRate.y,
+                                    z: motion.rotationRate.z)
+        }
+
         return GamepadState(
             leftStick: StickVector(x: Double(pad.leftThumbstick.xAxis.value),
                                    y: Double(pad.leftThumbstick.yAxis.value)),
             rightStick: StickVector(x: Double(pad.rightThumbstick.xAxis.value),
                                     y: Double(pad.rightThumbstick.yAxis.value)),
-            pressed: pressed)
+            pressed: pressed,
+            rotationRate: rotation)
     }
 }

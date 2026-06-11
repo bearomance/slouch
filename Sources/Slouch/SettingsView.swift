@@ -95,6 +95,22 @@ struct GeneralTab: View {
                     Toggle("", isOn: $model.config.settings.invertScroll).labelsHidden()
                 }
             }
+            Section("Gyro pointer") {
+                SettingsRow(color: .orange, symbol: "gyroscope",
+                            title: "Gyro sensitivity", subtitle: "10 – 150 px/° · Recommended 50") {
+                    SliderInputRow(value: $model.config.settings.gyroSensitivity,
+                                   range: 10...150, step: 5,
+                                   format: .number.precision(.fractionLength(0)))
+                }
+                SettingsRow(color: .teal, symbol: "arrow.left.arrow.right",
+                            title: "Invert horizontal") {
+                    Toggle("", isOn: $model.config.settings.gyroInvertX).labelsHidden()
+                }
+                SettingsRow(color: .purple, symbol: "arrow.up.arrow.down",
+                            title: "Invert vertical") {
+                    Toggle("", isOn: $model.config.settings.gyroInvertY).labelsHidden()
+                }
+            }
             Section {
                 SettingsRow(color: .gray, symbol: "arrow.counterclockwise",
                             title: "Backup", subtitle: "Export or import all settings") {

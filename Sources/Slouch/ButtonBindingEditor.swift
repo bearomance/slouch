@@ -36,6 +36,7 @@ private enum FunctionKind: String, CaseIterable, Identifiable {
     case openURL = "Open URL"
     case keyboardViewer = "Keyboard Viewer"
     case precision = "Precision Cursor"
+    case gyro = "Gyro Pointer"
     var id: String { rawValue }
 }
 
@@ -44,7 +45,7 @@ private func category(of action: OutputAction?) -> ActionCategory {
     case .mouseClick: return .mouse
     case .keystroke: return .keyboard
     case .mediaKey: return .media
-    case .openURL, .sleep, .keyboardViewer, .precision: return .function
+    case .openURL, .sleep, .keyboardViewer, .precision, .gyroPointer: return .function
     case .some(.none), nil: return .off
     }
 }
@@ -259,6 +260,7 @@ struct ButtonBindingRow: View {
                 case .openURL?: return .openURL
                 case .keyboardViewer?: return .keyboardViewer
                 case .precision?: return .precision
+                case .gyroPointer?: return .gyro
                 default: return .sleep
                 }
             },
@@ -267,6 +269,7 @@ struct ButtonBindingRow: View {
                 case .sleep: action = .sleep
                 case .keyboardViewer: action = .keyboardViewer
                 case .precision: action = .precision
+                case .gyro: action = .gyroPointer
                 case .openURL:
                     if case .openURL? = action {} else { action = .openURL("https://www.bilibili.com") }
                 }

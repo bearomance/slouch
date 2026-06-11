@@ -6,6 +6,7 @@ public final class MappingEngine {
     private var previouslyPressed: Set<ButtonID> = []
     private var repeatClocks: [ButtonID: (held: Double, nextFire: Double)] = [:]
     private var precisionHeld = false
+    private let gyro = GyroPointer()
 
     public var repeatInitialDelay = 0.4
     public var repeatInterval = 0.08
@@ -19,10 +20,30 @@ public final class MappingEngine {
         precisionHeld = state.pressed.contains { mapping.buttons[$0] == .precision }
         var commands: [SynthCommand] = []
         commands.append(contentsOf: stickCommands(state: state, dt: dt))
+        commands.append(contentsOf: gyroCommands(state: state, dt: dt))
         commands.append(contentsOf: buttonCommands(state: state))
         commands.append(contentsOf: repeatCommands(state: state, dt: dt))
         previouslyPressed = state.pressed
         return commands
+    }
+
+    /// Re-zero the gyro; the app calls this on every connect/rebind.
+    public func resetGyroCalibration() { gyro.reset() }
+
+    // The gyro is fed every tick so calibration and drift tracking always
+    // run; only a held Gyro Pointer button turns its output into motion.
+    private func gyroCommands(state: GamepadState, dt: Double) -> [SynthCommand] {
+        guard let rate = state.rotationRate else { return [] }
+        let delta = gyro.process(rate: rate, dt: dt)
+        let held = state.pressed.contains { mapping.buttons[$0] == .gyroPointer }
+        guard held, delta.dx != 0 || delta.dy != 0 else { return [] }
+        let pxPerRadian = settings.gyroSensitivity * 180 / .pi
+        let factor = precisionHeld ? settings.precisionFactor : 1
+        var dx = delta.dx * pxPerRadian * factor
+        var dy = delta.dy * pxPerRadian * factor
+        if settings.gyroInvertX { dx = -dx }
+        if settings.gyroInvertY { dy = -dy }
+        return [.moveMouse(dx: dx, dy: dy)]
     }
 
     /// Synthesized keys get no system auto-repeat (that lives in the keyboard
@@ -99,7 +120,7 @@ public final class MappingEngine {
             case .mediaKey(let k): commands.append(.mediaKey(k))
             case .openURL(let url): commands.append(.openURL(url))
             case .keyboardViewer: commands.append(.keyboardViewer)
-            case .sleep, .precision, OutputAction.none?, nil: break
+            case .sleep, .precision, .gyroPointer, OutputAction.none?, nil: break
             }
         }
         for button in justReleased {
@@ -110,7 +131,7 @@ public final class MappingEngine {
             // HID report wake the Mac right back up.
             case .sleep: commands.append(.sleep)
             // Media keys send a complete down+up pair on press; nothing on release.
-            case .mediaKey, .openURL, .keyboardViewer, .precision, OutputAction.none?, nil: break
+            case .mediaKey, .openURL, .keyboardViewer, .precision, .gyroPointer, OutputAction.none?, nil: break
             }
         }
         return commands
