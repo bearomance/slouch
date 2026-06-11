@@ -59,6 +59,17 @@ final class KeyRepeatTests: XCTestCase {
         XCTAssertEqual(repeats(in: cmds), 0)
     }
 
+    func test_repeatTiming_isConfigurable() {
+        let engine = makeEngine([.dpadUp: .keystroke(arrow)])
+        engine.repeatInitialDelay = 0.2
+        engine.repeatInterval = 0.5
+        _ = engine.process(state: GamepadState(pressed: [.dpadUp]), dt: 1.0 / 60)
+        XCTAssertEqual(repeats(in: engine.process(state: GamepadState(pressed: [.dpadUp]), dt: 0.19)), 0)
+        XCTAssertEqual(repeats(in: engine.process(state: GamepadState(pressed: [.dpadUp]), dt: 0.02)), 1)
+        XCTAssertEqual(repeats(in: engine.process(state: GamepadState(pressed: [.dpadUp]), dt: 0.49)), 0)
+        XCTAssertEqual(repeats(in: engine.process(state: GamepadState(pressed: [.dpadUp]), dt: 0.02)), 1)
+    }
+
     func test_standaloneModifier_neverRepeats() {
         let engine = makeEngine([.x: .keystroke(KeyStroke(keyCode: 54))]) // bare R⌘
         _ = engine.process(state: GamepadState(pressed: [.x]), dt: 1.0 / 60)

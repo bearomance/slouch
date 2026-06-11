@@ -138,6 +138,9 @@ final class AppModel: NSObject, ObservableObject {
             isEnabled = false
             return
         }
+        // Match the user's keyboard repeat feel from System Settings.
+        if NSEvent.keyRepeatDelay > 0 { engine.repeatInitialDelay = NSEvent.keyRepeatDelay }
+        if NSEvent.keyRepeatInterval > 0 { engine.repeatInterval = NSEvent.keyRepeatInterval }
         updateDisplayLink()
     }
 

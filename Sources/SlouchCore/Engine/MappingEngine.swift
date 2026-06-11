@@ -7,8 +7,8 @@ public final class MappingEngine {
     private var repeatClocks: [ButtonID: (held: Double, nextFire: Double)] = [:]
     private var precisionHeld = false
 
-    public static let repeatInitialDelay = 0.4
-    public static let repeatInterval = 0.08
+    public var repeatInitialDelay = 0.4
+    public var repeatInterval = 0.08
 
     public init(mapping: Mapping, settings: Settings) {
         self.mapping = mapping
@@ -34,14 +34,14 @@ public final class MappingEngine {
             guard case .keystroke(let stroke)? = mapping.buttons[button],
                   !KeyStroke.modifierKeyCodes.contains(stroke.keyCode) else { continue }
             guard previouslyPressed.contains(button) else {
-                repeatClocks[button] = (held: 0, nextFire: Self.repeatInitialDelay)
+                repeatClocks[button] = (held: 0, nextFire: repeatInitialDelay)
                 continue
             }
             guard var clock = repeatClocks[button] else { continue }
             clock.held += dt
             if clock.held >= clock.nextFire {
                 commands.append(.keyRepeat(stroke))
-                clock.nextFire = clock.held + Self.repeatInterval
+                clock.nextFire = clock.held + repeatInterval
             }
             repeatClocks[button] = clock
         }
