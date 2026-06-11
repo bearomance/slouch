@@ -3,6 +3,7 @@ name: Package
 on:
   push:
     branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -58,6 +59,16 @@ jobs:
           BUILD=$(git rev-list --count HEAD)
           SHORT=${GITHUB_SHA:0:7}
           TAG="build-${BUILD}-${SHORT}"
+          TITLE="Build ${BUILD} (${SHORT})"
+
+          # Branch builds are prereleases: /releases/latest skips them, so
+          # the in-app updater never offers a test build as an upgrade.
+          PRERELEASE=""
+          if [ "$GITHUB_REF_NAME" != "master" ]; then
+            TAG="${GITHUB_REF_NAME}-${TAG}"
+            TITLE="${TITLE} [${GITHUB_REF_NAME}]"
+            PRERELEASE="--prerelease"
+          fi
 
           # Changes since the previous release (fall back to the last 10 commits).
           PREV_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || true)
@@ -76,8 +87,8 @@ jobs:
 
           gh release create "$TAG" Slouch.app.zip \
             --target "$GITHUB_SHA" \
-            --title "Build ${BUILD} (${SHORT})" \
-            --notes-file notes.md
+            --title "$TITLE" \
+            --notes-file notes.md $PRERELEASE
 
           # One-time cleanup of the old rolling release; no-op afterwards.
           gh release delete latest --yes --cleanup-tag || true
